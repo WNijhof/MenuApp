@@ -38,16 +38,54 @@ met ingrediënten die je wilt uitsluiten (bv. "vis" sluit ook kabeljauw, zalm,
 
 ### Optie 1: docker compose (aanbevolen)
 
-Bouwt en start beide containers (backend + frontend) in één keer, inclusief
-het gedeelde netwerk en het opslagvolume voor de database:
+`docker compose` bouwt en start beide containers (backend + frontend) in één
+keer, inclusief het gedeelde netwerk en het opslagvolume voor de database —
+je hoeft zelf niets te configureren.
+
+**1. Maak een map en haal de code op**, op de machine waar de app moet
+draaien (bv. je Ubuntu-server, via SSH):
 
 ```bash
+mkdir -p ~/weekmenu
+cd ~/weekmenu
+git clone https://github.com/WNijhof/MenuApp.git .
+```
+
+Geen git beschikbaar, of liever handmatig kopiëren? Dan volstaat ook een
+`rsync`/`scp` van de projectmap vanaf je eigen computer naar `~/weekmenu` op
+de server — sla dan de `git clone`-stap hierboven over.
+
+**2. Bouw en start de containers**, vanuit diezelfde map:
+
+```bash
+cd ~/weekmenu
 docker compose up -d --build
 ```
 
-De app is dan bereikbaar op `http://<server-ip>:8080`. Stoppen doe je met
-`docker compose down` (de database blijft bewaard in het `menuapp-data`-
-volume); `docker compose logs -f backend` toont de logs.
+De eerste keer duurt dit een paar minuten (installeert Python- en
+npm-dependencies binnen de images). Controleer dat beide containers draaien:
+
+```bash
+docker compose ps
+```
+
+De app is dan bereikbaar op `http://<server-ip>:8080`.
+
+**3. Beheren:**
+
+```bash
+docker compose logs -f backend   # logs bekijken
+docker compose restart backend   # container herstarten zonder herbouwen
+docker compose down              # stoppen (database blijft bewaard in het menuapp-data-volume)
+```
+
+**4. Bijwerken** naar een nieuwere versie van de code:
+
+```bash
+cd ~/weekmenu
+git pull                # of: opnieuw rsync'en als je zonder git werkt
+docker compose up -d --build
+```
 
 ### Optie 2: losse docker run-commando's
 
