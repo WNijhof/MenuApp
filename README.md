@@ -1,53 +1,51 @@
 # Weekmenu
 
-Zelf te hosten webapp voor het samenstellen van je weekmenu. Haalt recepten op
-van de sites die je zelf configureert (standaard gevuld met de Nederlandse
-receptensites van [kadaza.nl/recepten](https://www.kadaza.nl/recepten)),
-verdeelt willekeurig 7 dagen met variatie in gerecht-type, en houdt rekening
-met ingrediënten die je wilt uitsluiten (bv. "vis" sluit ook kabeljauw, zalm,
-... uit).
+Self-hosted web app for putting together your weekly menu. Fetches recipes
+from the sites you configure yourself (pre-filled by default with the Dutch
+recipe sites from [kadaza.nl/recepten](https://www.kadaza.nl/recepten)),
+randomly fills 7 days with variety in dish type, and takes into account
+ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
 
 ## Screenshots
 
-| Weekmenu | Boodschappenlijst |
+| Weekly menu | Shopping list |
 |---|---|
-| ![Weekmenu-overzicht met per dag een recept](docs/screenshots/weekmenu.jpg) | ![Automatisch samengestelde boodschappenlijst](docs/screenshots/boodschappenlijst.jpg) |
+| ![Weekly menu overview with one recipe per day](docs/screenshots/weekmenu.jpg) | ![Automatically generated shopping list](docs/screenshots/boodschappenlijst.jpg) |
 
-| Recepten | Bronnen |
+| Recipes | Sources |
 |---|---|
-| ![Doorzoekbare receptenlijst met waardering](docs/screenshots/recepten.jpg) | ![Beheer van receptensites en hun synchronisatiestatus](docs/screenshots/bronnen.jpg) |
+| ![Searchable recipe list with rating](docs/screenshots/recepten.jpg) | ![Managing recipe sites and their sync status](docs/screenshots/bronnen.jpg) |
 
-## Hoe het werkt
+## How it works
 
-- **Bronnen**: elke bron is een receptensite. De app zoekt zelf de sitemap
-  van de site, vindt receptpagina's daarin, en leest per pagina de
-  gestructureerde receptgegevens (schema.org/Recipe) uit die vrijwel alle
-  moderne receptensites al standaard in hun paginacode hebben staan. Er is
-  dus geen site-specifieke scraper-code nodig — voeg een nieuwe site toe via
-  het tabblad **Bronnen** en synchroniseer.
-- **Uitsluitingen**: via het tabblad **Uitsluitingen** kun je een categorie
-  (vis, noten, varken, zuivel, ...) of een los ingrediënt opgeven. Categorieën
-  worden uitgebreid met synoniemen via `backend/app/data/taxonomy.json` —
-  pas dit bestand aan om zelf categorieën/synoniemen toe te voegen.
-- **Weekmenu**: de 7 dagen worden willekeurig gevuld, verdeeld over
-  verschillende gerecht-types (soep, pasta, vis, vlees, vegetarisch, ...) zodat
-  de week niet steeds hetzelfde soort gerecht bevat. Met de ↻-knop op een dag
-  wissel je dat ene recept voor een ander.
+- **Sources**: each source is a recipe site. The app finds the site's
+  sitemap itself, locates recipe pages within it, and reads the structured
+  recipe data (schema.org/Recipe) that virtually all modern recipe sites
+  already have in their page code by default. So no site-specific scraper
+  code is needed — add a new site via the **Sources** tab and sync.
+- **Exclusions**: via the **Exclusions** tab you can specify a category
+  (fish, nuts, pork, dairy, ...) or a single ingredient. Categories are
+  expanded with synonyms via `backend/app/data/taxonomy.json` — edit this
+  file to add your own categories/synonyms.
+- **Weekly menu**: the 7 days are filled randomly, spread across different
+  dish types (soup, pasta, fish, meat, vegetarian, ...) so the week doesn't
+  keep serving the same kind of dish. Use the ↻ button on a day to swap that
+  one recipe for another. Once you've done the groceries for a week, freeze
+  it to protect it from accidental changes.
 
-## Starten (Docker)
+## Getting started (Docker)
 
-Elke push naar `main` bouwt de backend- en frontend-image automatisch en
-publiceert ze naar GitHub Container Registry
-(`ghcr.io/wnijhof/menuapp-backend` / `menuapp-frontend`, zie
-`.github/workflows/docker-publish.yml`). Dat betekent: **geen lokale build
-nodig om te installeren** — `docker compose` haalt de kant-en-klare images
-op.
+Every push to `main` automatically builds the backend and frontend images
+and publishes them to the GitHub Container Registry
+(`ghcr.io/wnijhof/menuapp-backend` / `menuapp-frontend`, see
+`.github/workflows/docker-publish.yml`). That means: **no local build
+needed to install** — `docker compose` pulls the ready-made images.
 
-### Optie 1: docker compose (aanbevolen)
+### Option 1: docker compose (recommended)
 
-**1. Maak een map en haal de code op**, op de machine waar de app moet
-draaien (bv. je Ubuntu-server, via SSH) — enkel `docker-compose.yml` is
-eigenlijk nodig, maar de hele repo clonen is simpeler:
+**1. Create a folder and get the code**, on the machine where the app
+should run (e.g. your Ubuntu server, via SSH) — technically only
+`docker-compose.yml` is needed, but cloning the whole repo is simpler:
 
 ```bash
 mkdir -p ~/weekmenu
@@ -55,70 +53,70 @@ cd ~/weekmenu
 git clone https://github.com/WNijhof/MenuApp.git .
 ```
 
-Geen git beschikbaar, of liever handmatig kopiëren? Dan volstaat ook een
-`rsync`/`scp` van de projectmap vanaf je eigen computer naar `~/weekmenu` op
-de server — sla dan de `git clone`-stap hierboven over.
+No git available, or prefer to copy manually? An `rsync`/`scp` of the
+project folder from your own computer to `~/weekmenu` on the server works
+just as well — in that case skip the `git clone` step above.
 
-**2. Start de containers**, vanuit diezelfde map:
+**2. Start the containers**, from that same folder:
 
 ```bash
 cd ~/weekmenu
 docker compose up -d
 ```
 
-Dit **pullt** de vooraf gebouwde images (geen lokale build, dus snel) en
-start beide containers inclusief het gedeelde netwerk en het opslagvolume
-voor de database. Controleer dat beide draaien:
+This **pulls** the pre-built images (no local build, so it's fast) and
+starts both containers, including the shared network and the storage
+volume for the database. Check that both are running:
 
 ```bash
 docker compose ps
 ```
 
-De app is dan bereikbaar op `http://<server-ip>:8080`.
+The app is then available at `http://<server-ip>:8080`.
 
-**3. Beheren:**
+**3. Managing:**
 
 ```bash
-docker compose logs -f backend   # logs bekijken
-docker compose restart backend   # container herstarten
-docker compose down              # stoppen (database blijft bewaard in het menuapp-data-volume)
+docker compose logs -f backend   # view logs
+docker compose restart backend   # restart the container
+docker compose down              # stop (the database is kept in the menuapp-data volume)
 ```
 
-**4. Bijwerken** naar een nieuwere versie:
+**4. Updating** to a newer version:
 
 ```bash
 cd ~/weekmenu
-docker compose pull   # haalt de nieuwste gepubliceerde images op
+docker compose pull   # fetches the latest published images
 docker compose up -d
 ```
 
-**Liever zelf bouwen vanaf de broncode** (bv. om lokale wijzigingen te
-testen) in plaats van de gepubliceerde images te gebruiken? Voeg `--build`
-toe — dat overschrijft de gepullde image met een lokaal gebouwde:
+**Prefer to build from source yourself** (e.g. to test local changes)
+instead of using the published images? Add `--build` — that overwrites the
+pulled image with a locally built one:
 
 ```bash
 docker compose up -d --build
 ```
 
-### Optie 2: losse docker run-commando's
+### Option 2: standalone docker run commands
 
-Zonder Compose start je zelf twee containers, met de vooraf gebouwde images
-(`docker pull` in plaats van `docker build`). Ze moeten op hetzelfde
-Docker-netwerk zitten **en** de backend-container moet exact `backend` heten
-— de frontend-container (nginx) stuurt `/api`-verzoeken door naar
-`http://backend:8000`, wat alleen werkt via Docker's eigen naam-resolutie
-binnen een gedeeld netwerk:
+Without Compose, you start the two containers yourself, using the
+pre-built images (`docker pull` instead of `docker build`). They need to be
+on the same Docker network, **and** the backend container must be named
+exactly `backend` — the frontend container (nginx) forwards `/api`
+requests to `http://backend:8000`, which only works via Docker's own name
+resolution within a shared network:
 
 ```bash
-# Eigen netwerk en volume voor persistente data
+# Own network and volume for persistent data
 docker network create weekmenu-net
 docker volume create weekmenu-data
 
-# Vooraf gebouwde images ophalen (geen lokale build nodig)
+# Pull the pre-built images (no local build needed)
 docker pull ghcr.io/wnijhof/menuapp-backend:latest
 docker pull ghcr.io/wnijhof/menuapp-frontend:latest
 
-# Backend starten (naam "backend" is verplicht, zie hierboven)
+# Start the backend (the name "backend" is required, see above)
 docker run -d \
   --name backend \
   --network weekmenu-net \
@@ -126,7 +124,7 @@ docker run -d \
   -v weekmenu-data:/data \
   ghcr.io/wnijhof/menuapp-backend:latest
 
-# Frontend starten, poort 8080 op de host
+# Start the frontend, port 8080 on the host
 docker run -d \
   --name frontend \
   --network weekmenu-net \
@@ -135,43 +133,42 @@ docker run -d \
   ghcr.io/wnijhof/menuapp-frontend:latest
 ```
 
-De app is nu ook bereikbaar op `http://<server-ip>:8080`. Bijwerken: nieuwe
-images pullen, containers vervangen (`docker rm -f backend frontend` en
-opnieuw `docker run`) — het `weekmenu-data`-volume blijft ongemoeid bestaan.
+The app is now also available at `http://<server-ip>:8080`. Updating: pull
+the new images, replace the containers (`docker rm -f backend frontend`
+and `docker run` again) — the `weekmenu-data` volume is left untouched.
 
-Liever zelf bouwen vanaf de broncode? Vervang de `docker pull`-regels door
-`docker build -t weekmenu-backend ./backend` (en `weekmenu-frontend` voor de
-frontend), en gebruik die naam in plaats van de `ghcr.io/...`-image in de
-`docker run`-commando's.
+Prefer to build from source yourself? Replace the `docker pull` lines with
+`docker build -t weekmenu-backend ./backend` (and `weekmenu-frontend` for
+the frontend), and use that name instead of the `ghcr.io/...` image in the
+`docker run` commands.
 
-### Eerste gebruik (beide opties)
+### First use (either option)
 
-Recepten worden niet automatisch bij de eerste start opgehaald — ga naar
-**Bronnen** en klik op **Synchroniseer alle bronnen** (kan een paar minuten
-duren). Daarna draait er ook een automatische dagelijkse synchronisatie
-('s nachts om 03:00).
+Recipes aren't fetched automatically on first start — go to **Sources**
+and click **Sync all sources** (can take a few minutes). After that, an
+automatic daily sync also runs (at 03:00 at night).
 
-## Zelf bronnen toevoegen
+## Adding your own sources
 
-Vul in het tabblad **Bronnen** een naam en de URL van de site in (de
-homepage of een receptenoverzicht-pagina volstaat, bv.
-`https://www.voorbeeld.nl/recepten`). De app zoekt zelf naar
-`sitemap.xml`/`robots.txt` om receptpagina's te vinden. Werkt de site niet
-met een sitemap, of staat er geen schema.org-data op de paginas, dan worden
-er simpelweg geen recepten gevonden voor die bron — dat is een beperking van
-de site zelf, niet iets om te configureren.
+On the **Sources** tab, fill in a name and the URL of the site (the
+homepage or a recipe overview page is enough, e.g.
+`https://www.example.com/recipes`). The app itself looks for
+`sitemap.xml`/`robots.txt` to find recipe pages. If the site doesn't use a
+sitemap, or its pages have no schema.org data, no recipes will simply be
+found for that source — that's a limitation of the site itself, not
+something to configure.
 
-Losse recepten (één specifieke pagina) kun je direct toevoegen via het
-tabblad **Recepten** → voeg toe via URL.
+Individual recipes (one specific page) can be added directly via the
+**Recipes** tab → add by URL.
 
-## Lokale ontwikkeling (zonder Docker)
+## Local development (without Docker)
 
 Backend:
 
 ```bash
 cd backend
 python -m venv .venv
-./.venv/Scripts/activate  # of source .venv/bin/activate op Linux/Mac
+./.venv/Scripts/activate  # or source .venv/bin/activate on Linux/Mac
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
@@ -184,4 +181,4 @@ npm install
 npm run dev
 ```
 
-De Vite dev-server proxyt `/api` naar `http://localhost:8000`.
+The Vite dev server proxies `/api` to `http://localhost:8000`.
