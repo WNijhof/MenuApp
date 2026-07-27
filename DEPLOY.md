@@ -44,9 +44,17 @@ docker compose version
 
 ## 2. De code naar de server krijgen
 
-Het project staat nog niet in een git-repository, dus de simpelste manier is
-de projectmap direct kopiëren vanaf je eigen machine met `rsync` (of `scp`).
-Draai dit **op je eigen computer**, niet op de server:
+Log in op de server via SSH en clone de repository:
+
+```bash
+mkdir -p ~/menuapp
+cd ~/menuapp
+git clone https://github.com/WNijhof/MenuApp.git .
+```
+
+Geen git beschikbaar, of liever handmatig kopiëren? Dan volstaat ook een
+`rsync`/`scp` van de projectmap vanaf je eigen computer, **op je eigen
+computer** gedraaid (niet op de server):
 
 ```bash
 rsync -avz --exclude 'node_modules' --exclude '.venv' --exclude '__pycache__' \
@@ -54,26 +62,22 @@ rsync -avz --exclude 'node_modules' --exclude '.venv' --exclude '__pycache__' \
 ```
 
 Vervang `gebruiker@server-ip` door je eigen SSH-gebruikersnaam en het
-IP-adres (of hostnaam) van je server. `node_modules`/`.venv` hoeven niet mee
-— Docker installeert die opnieuw tijdens het bouwen van de images.
-
-*Alternatief*: als je liever met git werkt voor toekomstige updates, maak dan
-eerst een (eventueel privé) repository aan op GitHub/GitLab, initialiseer
-git lokaal (`git init`, commit, push), en doe op de server een `git clone`.
-Dat maakt latere updates een kwestie van `git pull` in plaats van opnieuw
-rsync'en — geen vereiste, maar wel prettiger op de lange termijn.
+IP-adres (of hostnaam) van je server.
 
 ## 3. Starten
 
-Log in op de server, ga naar de projectmap en start de containers:
+Vanuit de projectmap op de server:
 
 ```bash
 cd ~/menuapp
-docker compose up -d --build
+docker compose up -d
 ```
 
-De eerste keer bouwen duurt een paar minuten (installeert Python- en
-npm-dependencies). Controleer dat beide containers draaien:
+Elke push naar de `main`-branch bouwt de backend- en frontend-image
+automatisch en publiceert ze naar GitHub Container Registry — `docker
+compose up -d` **pullt** die kant-en-klare images dus in plaats van ze lokaal
+te bouwen, wat de eerste start een stuk sneller maakt. Controleer dat beide
+containers draaien:
 
 ```bash
 docker compose ps
@@ -81,6 +85,9 @@ docker compose ps
 
 De app is nu bereikbaar op `http://<server-ip>:8080` vanaf elk apparaat in
 hetzelfde netwerk.
+
+(Liever toch zelf bouwen vanaf de broncode, bv. na een lokale wijziging?
+Voeg `--build` toe: `docker compose up -d --build`.)
 
 Staat er een firewall aan (`sudo ufw status`)? Zet dan poort 8080 open:
 
@@ -103,12 +110,11 @@ Stel daarna naar wens in:
 
 ## 5. Updaten
 
-Wijzigingen doorgevoerd (lokaal aangepast en opnieuw ge-rsync't, of
-`git pull` als je voor de git-route koos)? Herbouw en herstart:
-
 ```bash
 cd ~/menuapp
-docker compose up -d --build
+git pull                # of: opnieuw rsync'en als je zonder git werkt
+docker compose pull     # nieuwste gepubliceerde images ophalen
+docker compose up -d
 ```
 
 Bestaande data (recepten, weekmenu's, instellingen) blijft behouden — die

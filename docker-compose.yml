@@ -1,5 +1,6 @@
 services:
   backend:
+    image: ghcr.io/wnijhof/menuapp-backend:latest
     build: ./backend
     restart: unless-stopped
     volumes:
@@ -8,6 +9,7 @@ services:
       - DATABASE_PATH=/data/menuapp.db
 
   frontend:
+    image: ghcr.io/wnijhof/menuapp-frontend:latest
     build: ./frontend
     restart: unless-stopped
     ports:

@@ -36,14 +36,18 @@ met ingrediënten die je wilt uitsluiten (bv. "vis" sluit ook kabeljauw, zalm,
 
 ## Starten (Docker)
 
+Elke push naar `main` bouwt de backend- en frontend-image automatisch en
+publiceert ze naar GitHub Container Registry
+(`ghcr.io/wnijhof/menuapp-backend` / `menuapp-frontend`, zie
+`.github/workflows/docker-publish.yml`). Dat betekent: **geen lokale build
+nodig om te installeren** — `docker compose` haalt de kant-en-klare images
+op.
+
 ### Optie 1: docker compose (aanbevolen)
 
-`docker compose` bouwt en start beide containers (backend + frontend) in één
-keer, inclusief het gedeelde netwerk en het opslagvolume voor de database —
-je hoeft zelf niets te configureren.
-
 **1. Maak een map en haal de code op**, op de machine waar de app moet
-draaien (bv. je Ubuntu-server, via SSH):
+draaien (bv. je Ubuntu-server, via SSH) — enkel `docker-compose.yml` is
+eigenlijk nodig, maar de hele repo clonen is simpeler:
 
 ```bash
 mkdir -p ~/weekmenu
@@ -55,15 +59,16 @@ Geen git beschikbaar, of liever handmatig kopiëren? Dan volstaat ook een
 `rsync`/`scp` van de projectmap vanaf je eigen computer naar `~/weekmenu` op
 de server — sla dan de `git clone`-stap hierboven over.
 
-**2. Bouw en start de containers**, vanuit diezelfde map:
+**2. Start de containers**, vanuit diezelfde map:
 
 ```bash
 cd ~/weekmenu
-docker compose up -d --build
+docker compose up -d
 ```
 
-De eerste keer duurt dit een paar minuten (installeert Python- en
-npm-dependencies binnen de images). Controleer dat beide containers draaien:
+Dit **pullt** de vooraf gebouwde images (geen lokale build, dus snel) en
+start beide containers inclusief het gedeelde netwerk en het opslagvolume
+voor de database. Controleer dat beide draaien:
 
 ```bash
 docker compose ps
@@ -75,21 +80,30 @@ De app is dan bereikbaar op `http://<server-ip>:8080`.
 
 ```bash
 docker compose logs -f backend   # logs bekijken
-docker compose restart backend   # container herstarten zonder herbouwen
+docker compose restart backend   # container herstarten
 docker compose down              # stoppen (database blijft bewaard in het menuapp-data-volume)
 ```
 
-**4. Bijwerken** naar een nieuwere versie van de code:
+**4. Bijwerken** naar een nieuwere versie:
 
 ```bash
 cd ~/weekmenu
-git pull                # of: opnieuw rsync'en als je zonder git werkt
+docker compose pull   # haalt de nieuwste gepubliceerde images op
+docker compose up -d
+```
+
+**Liever zelf bouwen vanaf de broncode** (bv. om lokale wijzigingen te
+testen) in plaats van de gepubliceerde images te gebruiken? Voeg `--build`
+toe — dat overschrijft de gepullde image met een lokaal gebouwde:
+
+```bash
 docker compose up -d --build
 ```
 
 ### Optie 2: losse docker run-commando's
 
-Zonder Compose bouw en start je zelf twee containers. Ze moeten op hetzelfde
+Zonder Compose start je zelf twee containers, met de vooraf gebouwde images
+(`docker pull` in plaats van `docker build`). Ze moeten op hetzelfde
 Docker-netwerk zitten **en** de backend-container moet exact `backend` heten
 — de frontend-container (nginx) stuurt `/api`-verzoeken door naar
 `http://backend:8000`, wat alleen werkt via Docker's eigen naam-resolutie
@@ -100,9 +114,9 @@ binnen een gedeeld netwerk:
 docker network create weekmenu-net
 docker volume create weekmenu-data
 
-# Images bouwen
-docker build -t weekmenu-backend ./backend
-docker build -t weekmenu-frontend ./frontend
+# Vooraf gebouwde images ophalen (geen lokale build nodig)
+docker pull ghcr.io/wnijhof/menuapp-backend:latest
+docker pull ghcr.io/wnijhof/menuapp-frontend:latest
 
 # Backend starten (naam "backend" is verplicht, zie hierboven)
 docker run -d \
@@ -110,7 +124,7 @@ docker run -d \
   --network weekmenu-net \
   --restart unless-stopped \
   -v weekmenu-data:/data \
-  weekmenu-backend
+  ghcr.io/wnijhof/menuapp-backend:latest
 
 # Frontend starten, poort 8080 op de host
 docker run -d \
@@ -118,13 +132,17 @@ docker run -d \
   --network weekmenu-net \
   --restart unless-stopped \
   -p 8080:80 \
-  weekmenu-frontend
+  ghcr.io/wnijhof/menuapp-frontend:latest
 ```
 
-De app is nu ook bereikbaar op `http://<server-ip>:8080`. Bijwerken na een
-codewijziging: containers stoppen/verwijderen (`docker rm -f backend
-frontend`), images opnieuw bouwen, en opnieuw `docker run` — het
-`weekmenu-data`-volume blijft ongemoeid bestaan.
+De app is nu ook bereikbaar op `http://<server-ip>:8080`. Bijwerken: nieuwe
+images pullen, containers vervangen (`docker rm -f backend frontend` en
+opnieuw `docker run`) — het `weekmenu-data`-volume blijft ongemoeid bestaan.
+
+Liever zelf bouwen vanaf de broncode? Vervang de `docker pull`-regels door
+`docker build -t weekmenu-backend ./backend` (en `weekmenu-frontend` voor de
+frontend), en gebruik die naam in plaats van de `ghcr.io/...`-image in de
+`docker run`-commando's.
 
 ### Eerste gebruik (beide opties)
 

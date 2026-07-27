@@ -1,0 +1,38 @@
+name: Build and publish Docker images
+
+# Publishes ghcr.io/wnijhof/menuapp-backend and menuapp-frontend on every
+# push to main, so a server only needs `docker compose up -d` (pulling
+# these images) instead of building from source on install/update.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        component: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.component }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.component }}
+          push: true
+          tags: |
+            ghcr.io/wnijhof/menuapp-${{ matrix.component }}:latest
+            ghcr.io/wnijhof/menuapp-${{ matrix.component }}:${{ github.sha }}
