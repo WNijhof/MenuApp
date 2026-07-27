@@ -7,6 +7,16 @@ verdeelt willekeurig 7 dagen met variatie in gerecht-type, en houdt rekening
 met ingrediënten die je wilt uitsluiten (bv. "vis" sluit ook kabeljauw, zalm,
 ... uit).
 
+## Screenshots
+
+| Weekmenu | Boodschappenlijst |
+|---|---|
+| ![Weekmenu-overzicht met per dag een recept](docs/screenshots/weekmenu.jpg) | ![Automatisch samengestelde boodschappenlijst](docs/screenshots/boodschappenlijst.jpg) |
+
+| Recepten | Bronnen |
+|---|---|
+| ![Doorzoekbare receptenlijst met waardering](docs/screenshots/recepten.jpg) | ![Beheer van receptensites en hun synchronisatiestatus](docs/screenshots/bronnen.jpg) |
+
 ## Hoe het werkt
 
 - **Bronnen**: elke bron is een receptensite. De app zoekt zelf de sitemap
@@ -26,11 +36,59 @@ met ingrediënten die je wilt uitsluiten (bv. "vis" sluit ook kabeljauw, zalm,
 
 ## Starten (Docker)
 
+### Optie 1: docker compose (aanbevolen)
+
+Bouwt en start beide containers (backend + frontend) in één keer, inclusief
+het gedeelde netwerk en het opslagvolume voor de database:
+
 ```bash
 docker compose up -d --build
 ```
 
-De app is dan bereikbaar op `http://<server-ip>:8080`.
+De app is dan bereikbaar op `http://<server-ip>:8080`. Stoppen doe je met
+`docker compose down` (de database blijft bewaard in het `menuapp-data`-
+volume); `docker compose logs -f backend` toont de logs.
+
+### Optie 2: losse docker run-commando's
+
+Zonder Compose bouw en start je zelf twee containers. Ze moeten op hetzelfde
+Docker-netwerk zitten **en** de backend-container moet exact `backend` heten
+— de frontend-container (nginx) stuurt `/api`-verzoeken door naar
+`http://backend:8000`, wat alleen werkt via Docker's eigen naam-resolutie
+binnen een gedeeld netwerk:
+
+```bash
+# Eigen netwerk en volume voor persistente data
+docker network create weekmenu-net
+docker volume create weekmenu-data
+
+# Images bouwen
+docker build -t weekmenu-backend ./backend
+docker build -t weekmenu-frontend ./frontend
+
+# Backend starten (naam "backend" is verplicht, zie hierboven)
+docker run -d \
+  --name backend \
+  --network weekmenu-net \
+  --restart unless-stopped \
+  -v weekmenu-data:/data \
+  weekmenu-backend
+
+# Frontend starten, poort 8080 op de host
+docker run -d \
+  --name frontend \
+  --network weekmenu-net \
+  --restart unless-stopped \
+  -p 8080:80 \
+  weekmenu-frontend
+```
+
+De app is nu ook bereikbaar op `http://<server-ip>:8080`. Bijwerken na een
+codewijziging: containers stoppen/verwijderen (`docker rm -f backend
+frontend`), images opnieuw bouwen, en opnieuw `docker run` — het
+`weekmenu-data`-volume blijft ongemoeid bestaan.
+
+### Eerste gebruik (beide opties)
 
 Recepten worden niet automatisch bij de eerste start opgehaald — ga naar
 **Bronnen** en klik op **Synchroniseer alle bronnen** (kan een paar minuten
