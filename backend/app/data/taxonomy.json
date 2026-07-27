@@ -1,0 +1,70 @@
+{
+  "vis": [
+    "vis", "visfilet", "kabeljauw", "zalm", "gerookte zalm", "tonijn", "forel",
+    "haring", "makreel", "schol", "heilbot", "pangasius", "kibbeling",
+    "sardine", "sardientjes", "ansjovis", "paling", "tilapia", "koolvis",
+    "wijting", "zeebaars", "poon", "schelvis", "snoekbaars", "meeval",
+    "viskuit", "kuit", "surimi", "vissticks", "visstick"
+  ],
+  "schaal-schelpdieren": [
+    "garnaal", "garnalen", "mossel", "mosselen", "oester", "oesters",
+    "kreeft", "krab", "krabvlees", "inktvis", "calamares", "calamari",
+    "octopus", "sint-jakobsschelp", "sint jakobsschelpen", "scampi", "gamba", "gambas"
+  ],
+  "rund": [
+    "rundvlees", "rund", "biefstuk", "ossenhaas", "gehakt", "rundergehakt",
+    "runderlappen", "entrecote", "ribeye", "ossenstaart", "runderrollade",
+    "rosbief", "sucadelappen"
+  ],
+  "varken": [
+    "varkensvlees", "varken", "spek", "spekjes", "bacon", "procureur",
+    "varkenshaas", "krabbetjes", "varkenslapje", "varkensfilet",
+    "varkensgehakt", "hamlap", "buikspek", "chorizo", "salami", "ham"
+  ],
+  "kip": [
+    "kip", "kipfilet", "kippendij", "kippenpoot", "kippenbout",
+    "gevogelte", "kipdij", "kiplapje", "kippenvleugel", "kalkoen",
+    "kalkoenfilet", "eend", "eendenborst"
+  ],
+  "lam": [
+    "lam", "lamsvlees", "lamskotelet", "lamsbout", "lamsrack"
+  ],
+  "noten": [
+    "noot", "noten", "amandel", "amandelen", "cashewnoot", "cashewnoten",
+    "hazelnoot", "hazelnoten", "walnoot", "walnoten", "pinda", "pinda's",
+    "pindakaas", "pistache", "pistachenoten", "macadamia", "pecannoot", "pecannoten"
+  ],
+  "gluten": [
+    "tarwe", "tarwebloem", "bloem", "brood", "broodkruim", "paneermeel",
+    "pasta", "spaghetti", "macaroni", "penne", "tagliatelle", "lasagnebladen",
+    "couscous", "gerst", "rogge", "spelt", "noedels", "udon", "ramen"
+  ],
+  "zuivel": [
+    "melk", "room", "slagroom", "kookroom", "kaas", "geraspte kaas",
+    "boter", "roomboter", "yoghurt", "griekse yoghurt", "kwark",
+    "creme fraiche", "crème fraîche", "mascarpone", "ricotta", "mozzarella",
+    "parmezaan", "parmezaanse kaas", "feta"
+  ],
+  "ei": [
+    "ei", "eieren", "eiwit", "eiwitten", "eidooier", "eidooiers"
+  ],
+  "peulvruchten": [
+    "boon", "bonen", "witte bonen", "bruine bonen", "kidneybonen",
+    "zwarte bonen", "linze", "linzen", "kikkererwt", "kikkererwten",
+    "erwt", "erwten", "sojaboon", "sojabonen", "edamame"
+  ],
+  "paddenstoelen": [
+    "champignon", "champignons", "paddenstoel", "paddenstoelen",
+    "cantharel", "cantharellen", "oesterzwam", "shiitake", "portobello"
+  ],
+  "ui-look": [
+    "ui", "uien", "rode ui", "knoflook", "sjalot", "sjalotten", "bosui", "prei"
+  ],
+  "alcohol": [
+    "wijn", "rode wijn", "witte wijn", "bier", "rum", "cognac", "sherry",
+    "port", "likeur", "madeira", "calvados"
+  ],
+  "vegetarisch-vervangers": [
+    "tofu", "tempeh", "seitan", "quorn", "vega gehakt", "vegetarische worst"
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {"name": "24Kitchen", "base_url": "https://www.24kitchen.nl/recepten"},
+  {"name": "Uit Paulines Keuken", "base_url": "https://uitpaulineskeuken.nl/"},
+  {"name": "Eef Kookt Zo", "base_url": "https://www.eefkooktzo.nl/"},
+  {"name": "Foodies Magazine", "base_url": "https://www.foodiesmagazine.nl/"},
+  {"name": "Laura's Bakery", "base_url": "https://www.laurasbakery.nl/"},
+  {"name": "Lekker en Simpel", "base_url": "https://www.lekkerensimpel.com/"},
+  {"name": "Leuke Recepten", "base_url": "https://www.leukerecepten.nl/"},
+  {"name": "Okoko Recepten", "base_url": "http://www.okokorecepten.nl/"},
+  {"name": "Visrecepten.nl", "base_url": "http://www.visrecepten.nl/"},
+  {"name": "Voedingscentrum", "base_url": "https://www.voedingscentrum.nl/recepten"},
+  {"name": "Lidl Recepten", "base_url": "https://recepten.lidl.nl/"},
+  {"name": "AH Allerhande", "base_url": "https://www.ah.nl/allerhande/"},
+  {"name": "Jumbo Smulweb", "base_url": "https://www.jumbo.com/smulweb"},
+  {"name": "Coop Recepten", "base_url": "https://www.coop.nl/recepten"},
+  {"name": "PLUS Recepten", "base_url": "https://www.plus.nl/recepten"},
+  {"name": "Ekoplaza Recepten", "base_url": "https://www.ekoplaza.nl/nl/recepten"}
+]
