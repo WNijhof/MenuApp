@@ -6,6 +6,7 @@ JSON-LD, which the vast majority of recipe sites do.
 
 import datetime
 import json
+import logging
 import time
 import urllib.robotparser
 from urllib.parse import urljoin, urlparse
@@ -22,12 +23,21 @@ from app.config import (
     STALE_AFTER_DAYS,
     USER_AGENT,
 )
+from app.database import SessionLocal
 from app.models import Recipe, Source
 from app.services.categorizer import infer_course, infer_dish_type
 from app.services.lekkerensimpel_parser import parse_lekkerensimpel_recipe
 from app.services.recipe_parser import parse_recipe
 
+logger = logging.getLogger("menuapp.scraper")
+
 HEADERS = {"User-Agent": USER_AGENT}
+
+# One shared connection pool for every fetch (sitemaps, robots.txt, recipe
+# pages) instead of a fresh TCP+TLS handshake per request. `requests.Session`
+# pools per-host, and its underlying urllib3 pool is safe to share across
+# threads for plain GETs like these (no per-call mutation of session state).
+_session = requests.Session()
 
 _XML_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
@@ -55,7 +65,7 @@ def _root_url(url: str) -> str:
 
 
 def _fetch(url: str, as_text=True):
-    resp = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT_SECONDS)
+    resp = _session.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT_SECONDS)
     resp.raise_for_status()
     return resp.text if as_text else resp.content
 
@@ -156,7 +166,16 @@ def _is_recipe_hinted(url: str) -> bool:
 _MAX_SITEMAPS_TO_SCAN = 200
 
 
-def discover_candidate_urls(source: Source, max_pages: int) -> list[str]:
+def discover_candidate_urls(
+    source: Source, max_pages: int, needs_fetch=lambda url: True
+) -> list[str]:
+    """`needs_fetch(url)` lets the caller mark already-known, still-fresh
+    pages as not worth fetching (see `sync_source`). Only URLs it says yes
+    to count against `max_pages` while walking the sitemap tree - on a
+    re-sync of an already-large, mostly-unchanged source, most hinted URLs
+    encountered are already known, and without this the budget would be
+    exhausted on those before the walk ever reaches genuinely new pages
+    (which aren't necessarily sorted first in the site's own sitemap)."""
     sitemap_seeds = []
     if source.sitemap_url:
         sitemap_seeds.append(source.sitemap_url)
@@ -167,12 +186,12 @@ def discover_candidate_urls(source: Source, max_pages: int) -> list[str]:
 
     seen_sitemaps: set[str] = set()
     page_urls: list[str] = []
-    hinted_count = 0
+    actionable_hinted_count = 0
     to_process = list(dict.fromkeys(sitemap_seeds))  # de-dupe, keep order
 
     while (
         to_process
-        and hinted_count < max_pages
+        and actionable_hinted_count < max_pages
         and len(seen_sitemaps) < _MAX_SITEMAPS_TO_SCAN
     ):
         sitemap_url = to_process.pop(0)
@@ -186,7 +205,9 @@ def discover_candidate_urls(source: Source, max_pages: int) -> list[str]:
 
         pages, nested = _parse_sitemap_xml(xml_bytes)
         page_urls.extend(pages)
-        hinted_count += sum(1 for u in pages if _is_recipe_hinted(u))
+        actionable_hinted_count += sum(
+            1 for u in pages if _is_recipe_hinted(u) and needs_fetch(u)
+        )
 
         if nested:
             # Prefer nested sitemaps whose own name hints at recipes, so we
@@ -203,11 +224,15 @@ def discover_candidate_urls(source: Source, max_pages: int) -> list[str]:
     # with recipes) never split content into hinted vs. unhinted sitemaps,
     # so the page budget would otherwise get spent on whatever happens to
     # sort first. Rank hinted page URLs first so real recipe pages aren't
-    # crowded out by unrelated content within max_pages.
+    # crowded out by unrelated content within max_pages - and within those,
+    # rank actionable (new/stale) ones first so they can never get crowded
+    # out by already-known, still-fresh pages either.
     deduped = list(dict.fromkeys(page_urls))
     hinted_pages = [u for u in deduped if _is_recipe_hinted(u)]
     other_pages = [u for u in deduped if not _is_recipe_hinted(u)]
-    return (hinted_pages + other_pages)[:max_pages]
+    actionable_hinted = [u for u in hinted_pages if needs_fetch(u)]
+    known_fresh_hinted = [u for u in hinted_pages if not needs_fetch(u)]
+    return (actionable_hinted + known_fresh_hinted + other_pages)[:max_pages]
 
 
 def _extract_recipe_hinted_links(base_url: str, html: str) -> list[str]:
@@ -256,8 +281,25 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
 
     Returns (pages_checked, recipes_new, recipes_updated, error).
     """
+    # Recipe.url is globally unique (not just within one source), so the
+    # "already have this" check has to be global too - scoping it to
+    # source_id let two sources whose crawls overlap the same URL both try
+    # to insert it, and the resulting IntegrityError on commit used to take
+    # down the *entire* sync (see the try/except around the insert below).
+    # Built *before* sitemap discovery so discovery itself can skip
+    # already-known, still-fresh pages too - see discover_candidate_urls's
+    # `needs_fetch` param for why that matters on a re-sync.
+    existing_recipes_by_url: dict[str, Recipe] = {row.url: row for row in db.query(Recipe).all()}
+    stale_cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=STALE_AFTER_DAYS)
+
+    def needs_fetch(url: str) -> bool:
+        existing = existing_recipes_by_url.get(url)
+        if existing is None:
+            return True
+        return existing.source_id == source.id and existing.scraped_at < stale_cutoff
+
     try:
-        candidate_urls = discover_candidate_urls(source, source.max_pages)
+        candidate_urls = discover_candidate_urls(source, source.max_pages, needs_fetch)
     except Exception as exc:  # noqa: BLE001 - surface any discovery failure
         return 0, 0, 0, f"Kon sitemap niet lezen: {exc}"
 
@@ -266,14 +308,6 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
         # No sitemap (or an empty one) - fall back to crawling from the
         # source's own homepage instead of giving up immediately.
         candidate_urls = [source.base_url]
-
-    # Recipe.url is globally unique (not just within one source), so the
-    # "already have this" check has to be global too - scoping it to
-    # source_id let two sources whose crawls overlap the same URL both try
-    # to insert it, and the resulting IntegrityError on commit used to take
-    # down the *entire* sync (see the try/except around the insert below).
-    existing_recipes_by_url: dict[str, Recipe] = {row.url: row for row in db.query(Recipe).all()}
-    stale_cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=STALE_AFTER_DAYS)
 
     pages_checked = 0
     recipes_new = 0
@@ -295,10 +329,8 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
     while stack and pages_checked < source.max_pages:
         url = stack.pop()
         existing = existing_recipes_by_url.get(url)
-        if existing is not None:
-            is_own_stale = existing.source_id == source.id and existing.scraped_at < stale_cutoff
-            if not is_own_stale:
-                continue
+        if not needs_fetch(url):
+            continue
         if not _is_allowed(source.base_url, url):
             continue
 
@@ -378,6 +410,51 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
             "Geen recepten-URL's gevonden via sitemap.xml / robots.txt",
         )
     return pages_checked, recipes_new, recipes_updated, None
+
+
+def sync_source_by_id(source_id: int) -> dict | None:
+    """Syncs one source in its own, freshly-opened DB session. Exists so
+    "sync all" (routers/sources.py, scheduler.py) can fan sources out
+    across a thread pool safely: a SQLAlchemy Session, and any ORM object
+    loaded through it, is only safe to use from the thread that opened it
+    - sharing one session/Source instance across threads would corrupt
+    state under concurrent access. Running different *sources* (i.e.
+    different sites) concurrently doesn't make the scrape less polite:
+    each source's own crawl still paces itself via REQUEST_DELAY_SECONDS,
+    this only removes the wait for *other* sources to finish first.
+
+    Returns None if the source no longer exists (e.g. deleted mid-run).
+    """
+    db = SessionLocal()
+    try:
+        source = db.get(Source, source_id)
+        if not source:
+            return None
+        try:
+            pages_checked, recipes_new, recipes_updated, error = sync_source(db, source)
+        except Exception as exc:  # noqa: BLE001 - one source's failure must not sink the batch
+            db.rollback()
+            logger.exception("Sync failed for source %s", source.name)
+            pages_checked, recipes_new, recipes_updated, error = (
+                0,
+                0,
+                0,
+                f"Onverwachte fout tijdens synchroniseren: {exc}",
+            )
+        source.last_synced_at = datetime.datetime.utcnow()
+        source.last_sync_found = recipes_new
+        source.last_sync_error = error
+        db.commit()
+        return {
+            "source_id": source.id,
+            "source_name": source.name,
+            "pages_checked": pages_checked,
+            "recipes_new": recipes_new,
+            "recipes_updated": recipes_updated,
+            "error": error,
+        }
+    finally:
+        db.close()
 
 
 def fetch_single_recipe(url: str) -> dict | None:

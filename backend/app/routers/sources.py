@@ -1,3 +1,4 @@
+import concurrent.futures
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -5,9 +6,10 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import schemas
+from app.config import MAX_CONCURRENT_SOURCE_SYNCS
 from app.database import get_db
 from app.models import Recipe, Source
-from app.services.scraper import sync_source
+from app.services.scraper import sync_source, sync_source_by_id
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 logger = logging.getLogger("menuapp.sources")
@@ -108,23 +110,27 @@ def sync_single_source(source_id: int, db: Session = Depends(get_db)):
 
 @router.post("/sync-all", response_model=list[schemas.SyncResult])
 def sync_all_sources(db: Session = Depends(get_db)):
-    import datetime
+    source_ids = [
+        row.id for row in db.query(Source.id).filter(Source.enabled.is_(True)).all()
+    ]
 
-    results = []
-    for source in db.query(Source).filter(Source.enabled.is_(True)).all():
-        pages_checked, recipes_new, recipes_updated, error = _run_sync(db, source)
-        source.last_synced_at = datetime.datetime.utcnow()
-        source.last_sync_found = recipes_new
-        source.last_sync_error = error
-        db.commit()
-        results.append(
-            schemas.SyncResult(
-                source_id=source.id,
-                source_name=source.name,
-                pages_checked=pages_checked,
-                recipes_found=recipes_new,
-                recipes_updated=recipes_updated,
-                error=error,
-            )
+    # Different sources are different sites - syncing several concurrently
+    # doesn't make any single one of them less polite (each still paces
+    # its own requests via REQUEST_DELAY_SECONDS), it just stops them
+    # queueing behind each other one at a time. Each runs in its own DB
+    # session via sync_source_by_id, which is required for thread-safety.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_CONCURRENT_SOURCE_SYNCS) as pool:
+        raw_results = list(pool.map(sync_source_by_id, source_ids))
+
+    return [
+        schemas.SyncResult(
+            source_id=r["source_id"],
+            source_name=r["source_name"],
+            pages_checked=r["pages_checked"],
+            recipes_found=r["recipes_new"],
+            recipes_updated=r["recipes_updated"],
+            error=r["error"],
         )
-    return results
+        for r in raw_results
+        if r is not None
+    ]
