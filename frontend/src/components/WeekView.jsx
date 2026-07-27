@@ -11,6 +11,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [refreshingDay, setRefreshingDay] = useState(null);
+  const [freezing, setFreezing] = useState(false);
   const [error, setError] = useState(null);
   const [dayWarning, setDayWarning] = useState(null);
   const [counts, setCounts] = useState({ hoofdgerecht: 7, voorgerecht: 0, nagerecht: 0 });
@@ -47,6 +48,11 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
 
   const menuTotal = Object.values(menu?.course_counts || {}).reduce((a, b) => a + b, 0);
   const isFullWeek = menuTotal === DAYS_PER_WEEK;
+  const isFrozen = !!menu?.frozen;
+  // course_counts is only non-empty once a menu has actually been generated
+  // and persisted - freezing an ephemeral, not-yet-generated week makes no
+  // sense (there's nothing in the database yet to protect).
+  const hasMenu = menuTotal > 0;
   // With fewer than 7 dishes requested, the open days aren't tied to real
   // weekdays (they're randomly interleaved server-side) - showing them as
   // e.g. "Donderdag: geen recept" would be misleading, so just don't
@@ -93,6 +99,19 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
     }
   };
 
+  const handleToggleFrozen = async () => {
+    setFreezing(true);
+    setError(null);
+    try {
+      const updated = await api.setWeekFrozen(menu.week_start_date, !menu.frozen);
+      setMenu(updated);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setFreezing(false);
+    }
+  };
+
   const handleRateDay = async (dayOfWeek, recipe, rating) => {
     const newRating = recipe.rating === rating ? null : rating;
     try {
@@ -129,6 +148,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             min="0"
             max={DAYS_PER_WEEK}
             value={counts.hoofdgerecht}
+            disabled={isFrozen}
             onChange={(e) => handleCountChange("hoofdgerecht", e.target.value)}
           />
         </label>
@@ -139,6 +159,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             min="0"
             max={DAYS_PER_WEEK}
             value={counts.voorgerecht}
+            disabled={isFrozen}
             onChange={(e) => handleCountChange("voorgerecht", e.target.value)}
           />
         </label>
@@ -149,15 +170,35 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             min="0"
             max={DAYS_PER_WEEK}
             value={counts.nagerecht}
+            disabled={isFrozen}
             onChange={(e) => handleCountChange("nagerecht", e.target.value)}
           />
         </label>
-        <button onClick={handleRegenerate} disabled={regenerating || !countsValid}>
+        <button onClick={handleRegenerate} disabled={regenerating || !countsValid || isFrozen}>
           {regenerating ? "Bezig…" : "Genereer nieuwe week"}
         </button>
+        {hasMenu && (
+          <button
+            className={isFrozen ? "active" : ""}
+            onClick={handleToggleFrozen}
+            disabled={freezing}
+            title={
+              isFrozen
+                ? "Ontdooi deze week om weer wijzigingen toe te staan"
+                : "Bevries deze week zodat er niets meer per ongeluk verandert (bijv. na het doen van de boodschappen)"
+            }
+          >
+            {freezing ? "Bezig…" : isFrozen ? "❄️ Ontdooi week" : "Bevries week"}
+          </button>
+        )}
       </div>
       {!countsValid && (
         <p className="error-text">Aantal gerechten kan niet meer dan {DAYS_PER_WEEK} zijn (nu {countsTotal}).</p>
+      )}
+      {isFrozen && (
+        <p className="status-text">
+          Deze week is bevroren — het menu wordt niet meer gewijzigd. Ontdooi de week om aanpassingen te doen.
+        </p>
       )}
 
       {error && <p className="error-text">{error}</p>}
@@ -178,6 +219,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             onRefresh={() => handleRefreshDay(day.day_of_week)}
             onRate={(rating) => handleRateDay(day.day_of_week, day.recipe, rating)}
             showDayName={isFullWeek}
+            frozen={isFrozen}
           />
         ))}
       </div>

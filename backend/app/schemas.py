@@ -129,7 +129,12 @@ class WeekMenuOut(BaseModel):
     week_start_date: datetime.date
     days: list[WeekMenuDayOut]
     course_counts: dict[str, int] = {}
+    frozen: bool = False
     warnings: list[str] = []
+
+
+class FreezeUpdate(BaseModel):
+    frozen: bool
 
 
 class GenerateMenuRequest(BaseModel):

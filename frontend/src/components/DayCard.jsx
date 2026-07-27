@@ -11,7 +11,15 @@ const DAY_NAMES = [
   "Zondag",
 ];
 
-export default function DayCard({ dayOfWeek, recipe, onRefresh, refreshing, onRate, showDayName = true }) {
+export default function DayCard({
+  dayOfWeek,
+  recipe,
+  onRefresh,
+  refreshing,
+  onRate,
+  showDayName = true,
+  frozen = false,
+}) {
   return (
     <div className="day-card">
       <div className="day-card-header">
@@ -19,8 +27,8 @@ export default function DayCard({ dayOfWeek, recipe, onRefresh, refreshing, onRa
         <button
           className="icon-button"
           onClick={onRefresh}
-          disabled={refreshing}
-          title="Wissel voor een ander recept"
+          disabled={refreshing || frozen}
+          title={frozen ? "Ontdooi de week om te wisselen" : "Wissel voor een ander recept"}
           aria-label="Wissel voor een ander recept"
         >
           {refreshing ? "…" : "↻"}

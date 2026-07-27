@@ -138,6 +138,11 @@ button.danger {
   background: var(--accent-hover);
 }
 
+.toolbar button.active {
+  background: #3a7ca5;
+  box-shadow: inset 0 0 0 2px #cfeeff;
+}
+
 .week-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

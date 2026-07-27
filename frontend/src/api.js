@@ -46,6 +46,11 @@ export const api = {
         : `/menu/day/${dayOfWeek}/refresh`,
       { method: "POST" }
     ),
+  setWeekFrozen: (weekStartDate, frozen) =>
+    request(`/menu/${weekStartDate}/freeze`, {
+      method: "PATCH",
+      body: JSON.stringify({ frozen }),
+    }),
 
   getSources: () => request("/sources"),
   createSource: (payload) =>

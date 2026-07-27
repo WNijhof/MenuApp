@@ -173,6 +173,7 @@ class WeekMenu(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     week_start_date: Mapped[datetime.date] = mapped_column(Date)
     course_counts_json: Mapped[str] = mapped_column(Text, default="{}")
+    frozen: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, default=datetime.datetime.utcnow
     )

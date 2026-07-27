@@ -57,6 +57,7 @@ def _to_week_menu_out(
         week_start_date=week_menu.week_start_date,
         days=days,
         course_counts=json.loads(week_menu.course_counts_json or "{}"),
+        frozen=week_menu.frozen,
         warnings=warnings or [],
     )
 
@@ -75,12 +76,22 @@ def _validate_course_counts(course_counts: dict[str, int] | None):
         )
 
 
+def _require_not_frozen(week_menu: WeekMenu):
+    """Once groceries were bought for a week, freezing it protects the menu
+    from accidental changes - regenerating, day-rerolls and deleting all
+    need it unfrozen first."""
+    if week_menu.frozen:
+        raise HTTPException(
+            400, "Weekmenu is bevroren. Ontdooi de week eerst om deze te wijzigen."
+        )
+
+
 def _ephemeral_week_menu(week_start: datetime.date) -> WeekMenu:
     """An in-memory-only stand-in for a week that hasn't been generated
     yet, used so *browsing* to a week (via the week-picker) doesn't
     permanently create and persist a menu for it. Never added to the
     session - nothing here is ever written to the database."""
-    week_menu = WeekMenu(week_start_date=week_start, course_counts_json="{}")
+    week_menu = WeekMenu(week_start_date=week_start, course_counts_json="{}", frozen=False)
     week_menu.days = [WeekMenuDay(day_of_week=i, recipe=None) for i in range(DAYS_PER_WEEK)]
     return week_menu
 
@@ -135,6 +146,9 @@ def generate_menu(
     course_counts = payload.course_counts if payload else None
     _validate_course_counts(course_counts)
     week_start = _resolve_week_start(payload.week_start_date if payload else None)
+    existing = db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start).first()
+    if existing:
+        _require_not_frozen(existing)
     week_menu = generate_week_menu(
         db,
         week_start,
@@ -160,6 +174,7 @@ def refresh_menu_day(
 
     week_start = _resolve_week_start(week_start_date)
     week_menu, _ = _get_or_generate_week_menu(db, week_start)
+    _require_not_frozen(week_menu)
 
     day_row, warning = refresh_day(db, week_menu, day_of_week)
     offer_terms = _current_offer_terms(db)
@@ -171,6 +186,23 @@ def refresh_menu_day(
     return result
 
 
+@router.patch("/{week_start_date}/freeze", response_model=schemas.WeekMenuOut)
+def set_week_frozen(
+    week_start_date: datetime.date,
+    payload: schemas.FreezeUpdate,
+    db: Session = Depends(get_db),
+):
+    week_menu = (
+        db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start_date).first()
+    )
+    if not week_menu:
+        raise HTTPException(404, "Weekmenu niet gevonden")
+    week_menu.frozen = payload.frozen
+    db.commit()
+    db.refresh(week_menu)
+    return _to_week_menu_out(week_menu, offer_terms=_current_offer_terms(db))
+
+
 @router.delete("/{week_start_date}")
 def delete_week_menu(week_start_date: datetime.date, db: Session = Depends(get_db)):
     week_menu = (
@@ -178,6 +210,7 @@ def delete_week_menu(week_start_date: datetime.date, db: Session = Depends(get_d
     )
     if not week_menu:
         raise HTTPException(404, "Weekmenu niet gevonden")
+    _require_not_frozen(week_menu)
     db.delete(week_menu)
     db.commit()
     return {"ok": True}

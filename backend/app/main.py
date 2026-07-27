@@ -31,6 +31,7 @@ _COLUMN_MIGRATIONS = [
     ("recipes", "rating", "VARCHAR(10)"),
     ("recipes", "rated_at", "DATETIME"),
     ("week_menus", "course_counts_json", "TEXT DEFAULT '{}'"),
+    ("week_menus", "frozen", "BOOLEAN DEFAULT 0"),
 ]
 
 

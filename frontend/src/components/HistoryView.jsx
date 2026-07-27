@@ -24,6 +24,10 @@ export default function HistoryView() {
 
   const handleDelete = async (week) => {
     const label = new Date(week.week_start_date).toLocaleDateString("nl-NL");
+    if (week.frozen) {
+      setError("Deze week is bevroren. Ontdooi de week eerst om te verwijderen.");
+      return;
+    }
     if (!confirm(`Weekmenu van ${label} verwijderen?`)) return;
     try {
       await api.deleteMenuWeek(week.week_start_date);
@@ -47,8 +51,11 @@ export default function HistoryView() {
         {weeks.map((week) => (
           <div key={week.week_start_date} className="history-week">
             <div className="history-week-header">
-              <h3>Week van {new Date(week.week_start_date).toLocaleDateString("nl-NL")}</h3>
-              <button className="danger" onClick={() => handleDelete(week)}>
+              <h3>
+                Week van {new Date(week.week_start_date).toLocaleDateString("nl-NL")}
+                {week.frozen && <span title="Bevroren"> ❄️</span>}
+              </h3>
+              <button className="danger" onClick={() => handleDelete(week)} disabled={week.frozen}>
                 Verwijder
               </button>
             </div>
