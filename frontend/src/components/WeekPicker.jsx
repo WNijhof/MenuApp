@@ -1,6 +1,8 @@
+import { useTranslation } from "../i18n.jsx";
+
 function toMonday(dateStr) {
   const d = new Date(`${dateStr}T00:00:00`);
-  const day = d.getDay(); // 0=zondag .. 6=zaterdag
+  const day = d.getDay(); // 0=Sunday .. 6=Saturday
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   // Build the ISO string from local date parts, not toISOString() (which
@@ -14,9 +16,12 @@ function toMonday(dateStr) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+const LOCALE_BY_LANG = { en: "en-GB", nl: "nl-NL" };
+
 export default function WeekPicker({ weekStartDate, onChange }) {
+  const { t, language } = useTranslation();
   const label = weekStartDate
-    ? new Date(`${weekStartDate}T00:00:00`).toLocaleDateString("nl-NL", {
+    ? new Date(`${weekStartDate}T00:00:00`).toLocaleDateString(LOCALE_BY_LANG[language] || "en-GB", {
         day: "numeric",
         month: "long",
         year: "numeric",
@@ -26,7 +31,7 @@ export default function WeekPicker({ weekStartDate, onChange }) {
   return (
     <div className="week-picker">
       <label>
-        Week van:{" "}
+        {t("weekPicker.label")}{" "}
         <input
           type="date"
           value={weekStartDate || ""}
@@ -34,9 +39,9 @@ export default function WeekPicker({ weekStartDate, onChange }) {
         />
       </label>
       <button type="button" onClick={() => onChange(null)}>
-        Deze week
+        {t("weekPicker.thisWeek")}
       </button>
-      {label && <span className="help-text">(maandag {label})</span>}
+      {label && <span className="help-text">{t("weekPicker.mondayOf", { date: label })}</span>}
     </div>
   );
 }

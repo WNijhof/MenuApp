@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useTranslation } from "../i18n.jsx";
 
 export default function SourceManager() {
+  const { t, language } = useTranslation();
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,7 +50,7 @@ export default function SourceManager() {
   };
 
   const handleDelete = async (source) => {
-    if (!confirm(`Bron "${source.name}" en bijbehorende recepten verwijderen?`)) return;
+    if (!confirm(t("sources.confirmDelete", { name: source.name }))) return;
     try {
       await api.deleteSource(source.id);
       await load();
@@ -85,13 +87,15 @@ export default function SourceManager() {
     }
   };
 
-  if (loading) return <p className="status-text">Bronnen worden geladen…</p>;
+  if (loading) return <p className="status-text">{t("sources.loading")}</p>;
+
+  const locale = language === "nl" ? "nl-NL" : "en-GB";
 
   return (
     <div>
       <div className="toolbar">
         <button onClick={handleSyncAll} disabled={syncingAll}>
-          {syncingAll ? "Bezig…" : "Synchroniseer alle bronnen"}
+          {syncingAll ? t("common.busy") : t("sources.syncAll")}
         </button>
       </div>
 
@@ -100,27 +104,27 @@ export default function SourceManager() {
       <form className="inline-form" onSubmit={handleAdd}>
         <input
           type="text"
-          placeholder="Naam (bv. Mijn favoriete site)"
+          placeholder={t("sources.namePlaceholder")}
           value={newSource.name}
           onChange={(e) => setNewSource({ ...newSource, name: e.target.value })}
         />
         <input
           type="url"
-          placeholder="https://voorbeeld.nl/recepten"
+          placeholder={t("sources.urlPlaceholder")}
           value={newSource.base_url}
           onChange={(e) => setNewSource({ ...newSource, base_url: e.target.value })}
         />
-        <button type="submit">Bron toevoegen</button>
+        <button type="submit">{t("sources.addButton")}</button>
       </form>
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>Naam</th>
-            <th>URL</th>
-            <th>Aan</th>
-            <th>Laatst gesynchroniseerd</th>
-            <th>Recepten</th>
+            <th>{t("sources.colName")}</th>
+            <th>{t("sources.colUrl")}</th>
+            <th>{t("sources.colEnabled")}</th>
+            <th>{t("sources.colLastSync")}</th>
+            <th>{t("sources.colRecipeCount")}</th>
             <th></th>
           </tr>
         </thead>
@@ -142,8 +146,8 @@ export default function SourceManager() {
               </td>
               <td>
                 {source.last_synced_at
-                  ? new Date(source.last_synced_at).toLocaleString("nl-NL")
-                  : "nooit"}
+                  ? new Date(source.last_synced_at).toLocaleString(locale)
+                  : t("sources.never")}
                 {source.last_sync_error && (
                   <div className="error-text small">{source.last_sync_error}</div>
                 )}
@@ -151,10 +155,10 @@ export default function SourceManager() {
               <td>{source.recipe_count}</td>
               <td className="row-actions">
                 <button onClick={() => handleSync(source)} disabled={syncingId === source.id}>
-                  {syncingId === source.id ? "…" : "Sync"}
+                  {syncingId === source.id ? "…" : t("sources.syncOne")}
                 </button>
                 <button onClick={() => handleDelete(source)} className="danger">
-                  Verwijder
+                  {t("common.delete")}
                 </button>
               </td>
             </tr>
@@ -164,13 +168,13 @@ export default function SourceManager() {
 
       {syncResults.length > 0 && (
         <div className="sync-results">
-          <h4>Laatste synchronisatie</h4>
+          <h4>{t("sources.lastSyncHeading")}</h4>
           <ul>
             {syncResults.map((r, i) => (
               <li key={i}>
-                {r.source_name}: {r.recipes_found} nieuwe recepten
-                {r.recipes_updated > 0 && `, ${r.recipes_updated} ververst`} (
-                {r.pages_checked} pagina's gecontroleerd)
+                {r.source_name}: {t("sources.syncResultNew", { count: r.recipes_found })}
+                {r.recipes_updated > 0 && t("sources.syncResultUpdated", { count: r.recipes_updated })}{" "}
+                {t("sources.syncResultPagesChecked", { count: r.pages_checked })}
                 {r.error && <span className="error-text"> — {r.error}</span>}
               </li>
             ))}

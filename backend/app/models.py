@@ -164,6 +164,9 @@ class AppSettings(Base):
     default_hoofdgerecht: Mapped[int] = mapped_column(Integer, default=7)
     default_voorgerecht: Mapped[int] = mapped_column(Integer, default=0)
     default_nagerecht: Mapped[int] = mapped_column(Integer, default=0)
+    background_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    accent_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    language: Mapped[str] = mapped_column(String(5), default="en")
 
 
 class WeekMenu(Base):

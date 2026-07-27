@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useTranslation } from "../i18n.jsx";
 
 export default function PantryManager() {
+  const { t } = useTranslation();
   const [staples, setStaples] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,13 +47,14 @@ export default function PantryManager() {
     }
   };
 
-  if (loading) return <p className="status-text">Basisproducten worden geladen…</p>;
+  if (loading) return <p className="status-text">{t("pantry.loading")}</p>;
 
   return (
     <div>
       <p className="help-text">
-        Producten die je altijd in huis hebt (bv. <em>zout</em>, <em>olie</em>,{" "}
-        <em>oregano</em>) verschijnen straks niet op de boodschappenlijst.
+        {t("pantry.helpPrefix")} <em>{t("pantry.example1")}</em>, <em>{t("pantry.example2")}</em>,{" "}
+        <em>{t("pantry.example3")}</em>
+        {t("pantry.helpSuffix")}
       </p>
 
       {error && <p className="error-text">{error}</p>}
@@ -59,11 +62,11 @@ export default function PantryManager() {
       <form className="inline-form" onSubmit={handleAdd}>
         <input
           type="text"
-          placeholder="bv. zout, olijfolie, peper"
+          placeholder={t("pantry.placeholder")}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
         />
-        <button type="submit">Toevoegen</button>
+        <button type="submit">{t("common.add")}</button>
       </form>
 
       <ul className="exclusion-list">
@@ -71,11 +74,11 @@ export default function PantryManager() {
           <li key={staple.id}>
             <strong>{staple.term}</strong>
             <button onClick={() => handleDelete(staple)} className="danger">
-              Verwijder
+              {t("common.delete")}
             </button>
           </li>
         ))}
-        {staples.length === 0 && <li className="status-text">Nog geen basisproducten.</li>}
+        {staples.length === 0 && <li className="status-text">{t("pantry.empty")}</li>}
       </ul>
     </div>
   );

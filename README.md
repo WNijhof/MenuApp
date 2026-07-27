@@ -6,6 +6,31 @@ recipe sites from [kadaza.nl/recepten](https://www.kadaza.nl/recepten)),
 randomly fills 7 days with variety in dish type, and takes into account
 ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
 
+## Features
+
+- **Multi-source recipe scraping** — add any recipe site with a sitemap and
+  schema.org/Recipe markup; no site-specific scraper code needed.
+- **Smart exclusions** — exclude a whole category (fish, nuts, pork,
+  dairy, ...) or a single ingredient; categories automatically expand to all
+  their synonyms.
+- **Weekly menu generation** — randomly fills 7 days with variety across
+  dish types and courses (starter/main/dessert), honoring your exclusions.
+- **Day rerolls & ratings** — swap out a single day's recipe, or like/dislike
+  recipes to steer future selections (disliked recipes are never suggested
+  again).
+- **Week freezing** — lock a week's menu once the groceries are done, so it
+  can't be regenerated or changed by accident.
+- **Automatic shopping list** — built from the week's recipes with
+  duplicate ingredients merged, plus one-off extras and quick-add frequent
+  items.
+- **Offers & leftovers** — synced supermarket discounts and tracked
+  leftovers are preferred during menu generation so nothing goes to waste.
+- **Pantry staples** — always-on-hand items (salt, oil, ...) are left off
+  the shopping list automatically.
+- **History** — browse and reuse previous weeks' menus.
+- **Customizable look** — pick your own background and accent color for the
+  app, and switch the UI language between English and Dutch.
+
 ## Screenshots
 
 | Weekly menu | Shopping list |

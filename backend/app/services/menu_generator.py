@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from sqlalchemy.orm import Session
 
+from app.i18n import t
 from app.models import ExclusionRule, Leftover, Offer, Recipe, WeekMenu, WeekMenuDay
 from app.services.categorizer import (
     normalize_offer_terms,
@@ -85,13 +86,12 @@ def _select_recipes_for_course(
     preferred_ids: set[int],
     warnings: list[str],
     course: str,
+    lang: str,
 ) -> list[Recipe]:
     if count <= 0:
         return []
     if not recipes:
-        warnings.append(
-            f"Geen recepten met gang '{course}' beschikbaar voor {count} dag(en)."
-        )
+        warnings.append(t("no_recipes_for_course", lang, course=course, count=count))
         return []
 
     groups = _group_by_dish_type(recipes)
@@ -108,9 +108,7 @@ def _select_recipes_for_course(
             # from any other type instead of leaving the slot empty.
             fallback = [r for r in recipes if r.id not in used_ids]
             if not fallback:
-                warnings.append(
-                    f"Te weinig unieke recepten met gang '{course}'; een recept wordt mogelijk herhaald."
-                )
+                warnings.append(t("too_few_unique_recipes", lang, course=course))
                 fallback = recipes
             candidates = fallback
 
@@ -119,15 +117,13 @@ def _select_recipes_for_course(
         chosen_list.append(chosen)
 
     if len(dish_types) < 3 and count >= 3:
-        warnings.append(
-            f"Weinig variatie aan gerecht-types binnen gang '{course}'; synchroniseer meer bronnen voor een gevarieerdere week."
-        )
+        warnings.append(t("low_dish_type_variety", lang, course=course))
 
     return chosen_list
 
 
 def generate_week_selection(
-    db: Session, course_counts: dict[str, int] | None = None
+    db: Session, course_counts: dict[str, int] | None = None, lang: str = "en"
 ) -> tuple[list[Recipe | None], list[str]]:
     """Returns (7 recipes-or-None in day order, warnings)."""
     course_counts = course_counts or DEFAULT_COURSE_COUNTS
@@ -135,9 +131,7 @@ def generate_week_selection(
     available = get_available_recipes(db)
 
     if not available:
-        return [None] * DAYS_PER_WEEK, [
-            "Geen recepten beschikbaar. Voeg bronnen toe en synchroniseer, of versoepel je uitsluitingen."
-        ]
+        return [None] * DAYS_PER_WEEK, [t("no_recipes_available", lang)]
 
     preferred_ids = _preferred_recipe_ids(db, available)
 
@@ -145,7 +139,7 @@ def generate_week_selection(
     for course, count in course_counts.items():
         recipes_for_course = [r for r in available if r.course == course]
         course_pool[course] = _select_recipes_for_course(
-            recipes_for_course, count, preferred_ids, warnings, course
+            recipes_for_course, count, preferred_ids, warnings, course, lang
         )
 
     # Interleave day order so e.g. the nagerecht doesn't always land on the
@@ -177,6 +171,7 @@ def generate_week_menu(
     db: Session,
     week_start_date,
     course_counts: dict[str, int] | None = None,
+    lang: str = "en",
     clear_leftovers: bool = True,
 ) -> WeekMenu:
     existing = (
@@ -186,7 +181,7 @@ def generate_week_menu(
         db.delete(existing)
         db.flush()
 
-    selection, warnings = generate_week_selection(db, course_counts)
+    selection, warnings = generate_week_selection(db, course_counts, lang)
 
     week_menu = WeekMenu(
         week_start_date=week_start_date,
@@ -218,7 +213,9 @@ def generate_week_menu(
     return week_menu
 
 
-def refresh_day(db: Session, week_menu: WeekMenu, day_of_week: int) -> tuple[WeekMenuDay, str | None]:
+def refresh_day(
+    db: Session, week_menu: WeekMenu, day_of_week: int, lang: str = "en"
+) -> tuple[WeekMenuDay, str | None]:
     """Swap the recipe on one day for a different random pick of the same
     course, preferring a dish type that differs from the neighbouring
     days."""
@@ -228,7 +225,7 @@ def refresh_day(db: Session, week_menu: WeekMenu, day_of_week: int) -> tuple[Wee
     available = get_available_recipes(db)
     same_course = [r for r in available if r.course == target_course]
     if not same_course:
-        warning = f"Geen andere recepten met gang '{target_course}' beschikbaar om naar te wisselen."
+        warning = t("no_other_recipes_for_course", lang, course=target_course)
         return day_row, warning
 
     preferred_ids = _preferred_recipe_ids(db, available)
@@ -255,7 +252,7 @@ def refresh_day(db: Session, week_menu: WeekMenu, day_of_week: int) -> tuple[Wee
         if not candidates:
             candidates = same_course
         chosen = _pick_preferred(candidates, preferred_ids)
-        warning = "Alle andere recepten worden al deze week gebruikt; herhaling kon niet worden voorkomen."
+        warning = t("repetition_unavoidable", lang)
 
     day_row.recipe_id = chosen.id
     db.commit()

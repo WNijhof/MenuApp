@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useTranslation } from "../i18n.jsx";
 
 export default function LeftoverManager() {
+  const { t } = useTranslation();
   const [leftovers, setLeftovers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,21 +49,18 @@ export default function LeftoverManager() {
 
   return (
     <div className="leftover-manager">
-      <p className="help-text">
-        Restjes in de koelkast? Recepten die deze bevatten krijgen voorrang bij het
-        genereren. De lijst wordt na het genereren automatisch geleegd.
-      </p>
+      <p className="help-text">{t("leftovers.help")}</p>
 
       {error && <p className="error-text">{error}</p>}
 
       <form className="inline-form" onSubmit={handleAdd}>
         <input
           type="text"
-          placeholder="bv. halve courgette, restje kip"
+          placeholder={t("leftovers.placeholder")}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
         />
-        <button type="submit">Toevoegen</button>
+        <button type="submit">{t("common.add")}</button>
       </form>
 
       {!loading && (
@@ -70,11 +69,11 @@ export default function LeftoverManager() {
             <li key={leftover.id}>
               <strong>{leftover.term}</strong>
               <button onClick={() => handleDelete(leftover)} className="danger">
-                Verwijder
+                {t("common.delete")}
               </button>
             </li>
           ))}
-          {leftovers.length === 0 && <li className="status-text">Geen restjes opgegeven.</li>}
+          {leftovers.length === 0 && <li className="status-text">{t("leftovers.empty")}</li>}
         </ul>
       )}
     </div>

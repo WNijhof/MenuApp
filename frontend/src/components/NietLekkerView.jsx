@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabel } from "../courses.js";
+import { useTranslation } from "../i18n.jsx";
 
 export default function NietLekkerView() {
+  const { t, language } = useTranslation();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,23 +34,20 @@ export default function NietLekkerView() {
     }
   };
 
-  if (loading) return <p className="status-text">Wordt geladen…</p>;
+  if (loading) return <p className="status-text">{t("disliked.loading")}</p>;
 
   return (
     <div>
-      <p className="help-text">
-        Recepten die je 👎 hebt gegeven worden niet meer herhaald in het weekmenu. Zet de
-        waardering terug om een recept weer mee te laten doen.
-      </p>
+      <p className="help-text">{t("disliked.help")}</p>
 
       {error && <p className="error-text">{error}</p>}
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>Titel</th>
-            <th>Type</th>
-            <th>Gang</th>
+            <th>{t("common.title")}</th>
+            <th>{t("common.dishType")}</th>
+            <th>{t("common.course")}</th>
             <th></th>
           </tr>
         </thead>
@@ -60,17 +59,17 @@ export default function NietLekkerView() {
                   {recipe.title}
                 </a>
               </td>
-              <td>{dishTypeLabel(recipe.dish_type)}</td>
-              <td>{courseLabel(recipe.course)}</td>
+              <td>{dishTypeLabel(recipe.dish_type, language)}</td>
+              <td>{courseLabel(recipe.course, language)}</td>
               <td className="row-actions">
-                <button onClick={() => handleRestore(recipe)}>Terugzetten</button>
+                <button onClick={() => handleRestore(recipe)}>{t("disliked.restore")}</button>
               </td>
             </tr>
           ))}
           {recipes.length === 0 && (
             <tr>
               <td colSpan={4} className="status-text">
-                Nog geen recepten als "niet lekker" gemarkeerd.
+                {t("disliked.empty")}
               </td>
             </tr>
           )}

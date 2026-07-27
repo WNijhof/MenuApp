@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 
 from app import schemas
 from app.database import get_db
+from app.i18n import t
 from app.models import Leftover
+from app.services.settings import get_language
 
 router = APIRouter(prefix="/api/leftovers", tags=["leftovers"])
 
@@ -16,16 +18,17 @@ def list_leftovers(db: Session = Depends(get_db)):
 
 @router.post("", response_model=schemas.LeftoverOut)
 def create_leftover(payload: schemas.LeftoverCreate, db: Session = Depends(get_db)):
+    lang = get_language(db)
     term = payload.term.strip().lower()
     if not term:
-        raise HTTPException(400, "Lege term")
+        raise HTTPException(400, t("empty_term", lang))
     leftover = Leftover(term=term)
     db.add(leftover)
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(409, "Dit restje staat al in de lijst")
+        raise HTTPException(409, t("leftover_exists", lang))
     db.refresh(leftover)
     return leftover
 
@@ -34,7 +37,7 @@ def create_leftover(payload: schemas.LeftoverCreate, db: Session = Depends(get_d
 def delete_leftover(leftover_id: int, db: Session = Depends(get_db)):
     leftover = db.get(Leftover, leftover_id)
     if not leftover:
-        raise HTTPException(404, "Restje niet gevonden")
+        raise HTTPException(404, t("leftover_not_found", get_language(db)))
     db.delete(leftover)
     db.commit()
     return {"ok": True}

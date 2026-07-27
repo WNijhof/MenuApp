@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { taxonomyCategoryLabel } from "../taxonomyCategories.js";
+import { useTranslation } from "../i18n.jsx";
 
 export default function ExclusionManager() {
+  const { t, language } = useTranslation();
   const [exclusions, setExclusions] = useState([]);
   const [taxonomy, setTaxonomy] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,14 +54,15 @@ export default function ExclusionManager() {
     }
   };
 
-  if (loading) return <p className="status-text">Uitsluitingen worden geladen…</p>;
+  if (loading) return <p className="status-text">{t("exclusions.loading")}</p>;
 
   return (
     <div>
       <p className="help-text">
-        Vul een categorie in (bv. <em>vis</em>, <em>noten</em>, <em>varken</em>) om alle
-        verwante ingrediënten (kabeljauw, zalm, ...) uit te sluiten, of typ een los
-        ingrediënt (bv. <em>koriander</em>).
+        {t("exclusions.helpPrefix")} <em>{t("exclusions.example1")}</em>, <em>{t("exclusions.example2")}</em>,{" "}
+        <em>{t("exclusions.example3")}</em>
+        {t("exclusions.helpMiddle")} <em>{t("exclusions.example4")}</em>
+        {t("exclusions.helpSuffix")}
       </p>
 
       {error && <p className="error-text">{error}</p>}
@@ -67,16 +71,18 @@ export default function ExclusionManager() {
         <input
           type="text"
           list="taxonomy-categories"
-          placeholder="bv. vis, noten, koriander"
+          placeholder={t("exclusions.placeholder")}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
         />
         <datalist id="taxonomy-categories">
           {taxonomy.map((cat) => (
-            <option key={cat} value={cat} />
+            <option key={cat} value={cat}>
+              {taxonomyCategoryLabel(cat, language)}
+            </option>
           ))}
         </datalist>
-        <button type="submit">Uitsluiten</button>
+        <button type="submit">{t("exclusions.addButton")}</button>
       </form>
 
       <ul className="exclusion-list">
@@ -86,16 +92,16 @@ export default function ExclusionManager() {
               <strong>{exclusion.term}</strong>
               {exclusion.expands_to.length > 1 && (
                 <div className="help-text small">
-                  Ook: {exclusion.expands_to.filter((t) => t !== exclusion.term).join(", ")}
+                  {t("exclusions.alsoLabel")} {exclusion.expands_to.filter((tm) => tm !== exclusion.term).join(", ")}
                 </div>
               )}
             </div>
             <button onClick={() => handleDelete(exclusion)} className="danger">
-              Verwijder
+              {t("common.delete")}
             </button>
           </li>
         ))}
-        {exclusions.length === 0 && <li className="status-text">Nog geen uitsluitingen.</li>}
+        {exclusions.length === 0 && <li className="status-text">{t("exclusions.empty")}</li>}
       </ul>
     </div>
   );

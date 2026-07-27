@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 
 from app import schemas
 from app.database import get_db
+from app.i18n import t
 from app.models import Offer, WeekMenu, WeekMenuDay
 from app.services.categorizer import normalize_offer_terms, recipe_matches_offers
 from app.services.menu_generator import DAYS_PER_WEEK, generate_week_menu, refresh_day
-from app.services.settings import default_course_counts
+from app.services.settings import default_course_counts, get_language
 from app.services.shopping_list import build_shopping_list
 
 router = APIRouter(prefix="/api/menu", tags=["menu"])
@@ -62,28 +63,24 @@ def _to_week_menu_out(
     )
 
 
-def _validate_course_counts(course_counts: dict[str, int] | None):
+def _validate_course_counts(course_counts: dict[str, int] | None, lang: str):
     """Fewer than 7 dishes is fine (the remaining days are simply left
     open); more than 7 doesn't fit the week's 7 day-slots."""
     if course_counts is None:
         return
     if any(v < 0 for v in course_counts.values()):
-        raise HTTPException(400, "Aantal gerechten kan niet negatief zijn")
+        raise HTTPException(400, t("course_counts_negative", lang))
     total = sum(course_counts.values())
     if total > DAYS_PER_WEEK:
-        raise HTTPException(
-            400, f"Aantal gerechten kan niet meer dan {DAYS_PER_WEEK} zijn, kreeg {total}"
-        )
+        raise HTTPException(400, t("course_counts_too_high", lang, max=DAYS_PER_WEEK, total=total))
 
 
-def _require_not_frozen(week_menu: WeekMenu):
+def _require_not_frozen(week_menu: WeekMenu, lang: str):
     """Once groceries were bought for a week, freezing it protects the menu
     from accidental changes - regenerating, day-rerolls and deleting all
     need it unfrozen first."""
     if week_menu.frozen:
-        raise HTTPException(
-            400, "Weekmenu is bevroren. Ontdooi de week eerst om deze te wijzigen."
-        )
+        raise HTTPException(400, t("week_frozen", lang))
 
 
 def _ephemeral_week_menu(week_start: datetime.date) -> WeekMenu:
@@ -105,20 +102,23 @@ def _get_or_generate_week_menu(
     if week_menu:
         return week_menu, []
 
+    lang = get_language(db)
     if not persist and week_start != _current_week_start():
         # Just looking, not the current week, and nothing generated for it
         # yet - don't create a row merely because it was viewed. It only
         # becomes real once the user explicitly generates it (or acts on
         # it, e.g. a day-reroll).
-        return _ephemeral_week_menu(week_start), [
-            "Nog geen weekmenu voor deze week — klik op 'Genereer nieuwe week' om er een te maken."
-        ]
+        return _ephemeral_week_menu(week_start), [t("no_week_menu_yet", lang)]
 
     # Leftovers are "what's in the fridge right now" - only clear them when
     # generating the *actual* current week, not some other week the user
     # is browsing/planning ahead or looking back at.
     week_menu = generate_week_menu(
-        db, week_start, default_course_counts(db), clear_leftovers=week_start == _current_week_start()
+        db,
+        week_start,
+        default_course_counts(db),
+        lang,
+        clear_leftovers=week_start == _current_week_start(),
     )
     return week_menu, getattr(week_menu, "warnings", [])
 
@@ -143,16 +143,18 @@ def get_current_shopping_list(week_start_date: datetime.date | None = None, db: 
 def generate_menu(
     payload: schemas.GenerateMenuRequest | None = None, db: Session = Depends(get_db)
 ):
+    lang = get_language(db)
     course_counts = payload.course_counts if payload else None
-    _validate_course_counts(course_counts)
+    _validate_course_counts(course_counts, lang)
     week_start = _resolve_week_start(payload.week_start_date if payload else None)
     existing = db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start).first()
     if existing:
-        _require_not_frozen(existing)
+        _require_not_frozen(existing, lang)
     week_menu = generate_week_menu(
         db,
         week_start,
         course_counts or default_course_counts(db),
+        lang,
         clear_leftovers=week_start == _current_week_start(),
     )
     return _to_week_menu_out(week_menu, getattr(week_menu, "warnings", []), _current_offer_terms(db))
@@ -169,14 +171,15 @@ def get_menu_history(db: Session = Depends(get_db)):
 def refresh_menu_day(
     day_of_week: int, week_start_date: datetime.date | None = None, db: Session = Depends(get_db)
 ):
+    lang = get_language(db)
     if day_of_week < 0 or day_of_week > 6:
-        raise HTTPException(400, "day_of_week moet tussen 0 en 6 liggen")
+        raise HTTPException(400, t("invalid_day_of_week", lang))
 
     week_start = _resolve_week_start(week_start_date)
     week_menu, _ = _get_or_generate_week_menu(db, week_start)
-    _require_not_frozen(week_menu)
+    _require_not_frozen(week_menu, lang)
 
-    day_row, warning = refresh_day(db, week_menu, day_of_week)
+    day_row, warning = refresh_day(db, week_menu, day_of_week, lang)
     offer_terms = _current_offer_terms(db)
     result = schemas.WeekMenuDayOut(
         day_of_week=day_row.day_of_week,
@@ -196,7 +199,7 @@ def set_week_frozen(
         db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start_date).first()
     )
     if not week_menu:
-        raise HTTPException(404, "Weekmenu niet gevonden")
+        raise HTTPException(404, t("week_menu_not_found", get_language(db)))
     week_menu.frozen = payload.frozen
     db.commit()
     db.refresh(week_menu)
@@ -205,12 +208,13 @@ def set_week_frozen(
 
 @router.delete("/{week_start_date}")
 def delete_week_menu(week_start_date: datetime.date, db: Session = Depends(get_db)):
+    lang = get_language(db)
     week_menu = (
         db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start_date).first()
     )
     if not week_menu:
-        raise HTTPException(404, "Weekmenu niet gevonden")
-    _require_not_frozen(week_menu)
+        raise HTTPException(404, t("week_menu_not_found", lang))
+    _require_not_frozen(week_menu, lang)
     db.delete(week_menu)
     db.commit()
     return {"ok": True}

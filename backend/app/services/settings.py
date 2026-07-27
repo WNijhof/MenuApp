@@ -22,3 +22,10 @@ def default_course_counts(db: Session) -> dict[str, int]:
         "voorgerecht": settings.default_voorgerecht,
         "nagerecht": settings.default_nagerecht,
     }
+
+
+def get_language(db: Session) -> str:
+    """Single household-wide language setting (like the color/course-count
+    preferences) - read directly from the settings row rather than threaded
+    through request headers, since this is a self-hosted single-tenant app."""
+    return get_or_create_settings(db).language

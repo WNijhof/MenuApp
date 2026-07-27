@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useTranslation } from "../i18n.jsx";
 
 const STORE_LABELS = { aldi: "Aldi", jumbo: "Jumbo", lidl: "Lidl" };
 
 export default function OffersView() {
+  const { t } = useTranslation();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -38,27 +40,24 @@ export default function OffersView() {
     }
   };
 
-  if (loading) return <p className="status-text">Aanbiedingen worden geladen…</p>;
+  if (loading) return <p className="status-text">{t("offers.loading")}</p>;
 
   const visibleOffers = storeFilter ? offers.filter((o) => o.store === storeFilter) : offers;
 
   return (
     <div>
-      <p className="help-text">
-        Huidige aanbiedingen bij Aldi, Jumbo en Lidl. Recepten die een van deze producten
-        gebruiken krijgen voorrang bij het genereren van het weekmenu.
-      </p>
+      <p className="help-text">{t("offers.help")}</p>
 
       {error && <p className="error-text">{error}</p>}
 
       <div className="toolbar">
         <button onClick={handleSync} disabled={syncing}>
-          {syncing ? "Bezig…" : "Ververs aanbiedingen"}
+          {syncing ? t("common.busy") : t("offers.sync")}
         </button>
         <label>
-          {" "}Winkel:{" "}
+          {" "}{t("offers.storeLabel")}{" "}
           <select value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}>
-            <option value="">Alle winkels</option>
+            <option value="">{t("offers.allStores")}</option>
             {Object.entries(STORE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -68,15 +67,15 @@ export default function OffersView() {
         </label>
       </div>
 
-      <p className="status-text">{visibleOffers.length} aanbiedingen</p>
+      <p className="status-text">{t("offers.count", { count: visibleOffers.length })}</p>
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>Product</th>
-            <th>Winkel</th>
-            <th>Prijs</th>
-            <th>Korting</th>
+            <th>{t("offers.colProduct")}</th>
+            <th>{t("offers.colStore")}</th>
+            <th>{t("offers.colPrice")}</th>
+            <th>{t("offers.colDiscount")}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +99,7 @@ export default function OffersView() {
           {visibleOffers.length === 0 && (
             <tr>
               <td colSpan={4} className="status-text">
-                Nog geen aanbiedingen opgehaald — klik op "Ververs aanbiedingen".
+                {t("offers.empty")}
               </td>
             </tr>
           )}

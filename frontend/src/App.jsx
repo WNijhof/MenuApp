@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "./api.js";
+import { applyTheme } from "./theme.js";
+import { DEFAULT_LANGUAGE, LanguageProvider, useTranslation } from "./i18n.jsx";
 import WeekView from "./components/WeekView.jsx";
 import SourceManager from "./components/SourceManager.jsx";
 import ExclusionManager from "./components/ExclusionManager.jsx";
@@ -10,37 +13,38 @@ import ShoppingListView from "./components/ShoppingListView.jsx";
 import OffersView from "./components/OffersView.jsx";
 import SettingsView from "./components/SettingsView.jsx";
 
-const TABS = [
-  { key: "week", label: "Weekmenu" },
-  { key: "shopping-list", label: "Boodschappenlijst" },
-  { key: "offers", label: "Aanbiedingen" },
-  { key: "history", label: "Geschiedenis" },
-  { key: "sources", label: "Bronnen" },
-  { key: "exclusions", label: "Uitsluitingen" },
-  { key: "pantry", label: "Basisproducten" },
-  { key: "recipes", label: "Recepten" },
-  { key: "niet-lekker", label: "Niet lekker" },
-  { key: "settings", label: "Instellingen" },
-];
-
-export default function App() {
+function AppShell() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("week");
   // Shared between Weekmenu and Boodschappenlijst so picking a week in one
   // tab carries over to the other. null = "the actual current week".
   const [weekStartDate, setWeekStartDate] = useState(null);
 
+  const TABS = [
+    { key: "week", label: t("tabs.week") },
+    { key: "shopping-list", label: t("tabs.shoppingList") },
+    { key: "offers", label: t("tabs.offers") },
+    { key: "history", label: t("tabs.history") },
+    { key: "sources", label: t("tabs.sources") },
+    { key: "exclusions", label: t("tabs.exclusions") },
+    { key: "pantry", label: t("tabs.pantry") },
+    { key: "recipes", label: t("tabs.recipes") },
+    { key: "niet-lekker", label: t("tabs.disliked") },
+    { key: "settings", label: t("tabs.settings") },
+  ];
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Weekmenu</h1>
+        <h1>{t("app.title")}</h1>
         <nav className="tabs">
-          {TABS.map((t) => (
+          {TABS.map((tabDef) => (
             <button
-              key={t.key}
-              className={tab === t.key ? "tab active" : "tab"}
-              onClick={() => setTab(t.key)}
+              key={tabDef.key}
+              className={tab === tabDef.key ? "tab active" : "tab"}
+              onClick={() => setTab(tabDef.key)}
             >
-              {t.label}
+              {tabDef.label}
             </button>
           ))}
         </nav>
@@ -61,5 +65,22 @@ export default function App() {
         {tab === "settings" && <SettingsView />}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
+
+  useEffect(() => {
+    api.getSettings().then((settings) => {
+      applyTheme(settings);
+      if (settings.language) setLanguage(settings.language);
+    }).catch(() => {});
+  }, []);
+
+  return (
+    <LanguageProvider initialLanguage={language}>
+      <AppShell />
+    </LanguageProvider>
   );
 }

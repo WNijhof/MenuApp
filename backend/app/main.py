@@ -32,6 +32,9 @@ _COLUMN_MIGRATIONS = [
     ("recipes", "rated_at", "DATETIME"),
     ("week_menus", "course_counts_json", "TEXT DEFAULT '{}'"),
     ("week_menus", "frozen", "BOOLEAN DEFAULT 0"),
+    ("app_settings", "background_color", "VARCHAR(20)"),
+    ("app_settings", "accent_color", "VARCHAR(20)"),
+    ("app_settings", "language", "VARCHAR(5) DEFAULT 'en'"),
 ]
 
 

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useTranslation } from "../i18n.jsx";
 import WeekPicker from "./WeekPicker.jsx";
 
 export default function ShoppingListView({ weekStartDate, onWeekChange }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [resolvedWeek, setResolvedWeek] = useState(weekStartDate);
   const [frequent, setFrequent] = useState([]);
@@ -42,7 +44,7 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      setError("Kopiëren naar klembord mislukt: " + e.message);
+      setError(t("shopping.copyFailed", { error: e.message }));
     }
   };
 
@@ -88,33 +90,29 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
     }
   };
 
-  if (loading) return <p className="status-text">Boodschappenlijst wordt geladen…</p>;
+  if (loading) return <p className="status-text">{t("shopping.loading")}</p>;
 
   return (
     <div>
       <WeekPicker weekStartDate={resolvedWeek} onChange={onWeekChange} />
 
-      <p className="help-text">
-        Alle ingrediënten van het weekmenu, min je basisproducten, plus wat je er zelf aan
-        toevoegt. Plak het tekstblok in Todoist's snel-toevoegen venster — elke regel wordt
-        een eigen taak.
-      </p>
+      <p className="help-text">{t("shopping.help")}</p>
 
       {error && <p className="error-text">{error}</p>}
 
       <form className="inline-form" onSubmit={handleAdd}>
         <input
           type="text"
-          placeholder="bv. wc-papier, eieren 6-pack"
+          placeholder={t("shopping.placeholder")}
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
         />
-        <button type="submit">Toevoegen</button>
+        <button type="submit">{t("common.add")}</button>
       </form>
 
       {frequent.length > 0 && (
         <div className="frequent-items">
-          <span className="help-text small">Veelgebruikt:</span>
+          <span className="help-text small">{t("shopping.frequentLabel")}</span>
           {frequent.map((f) => (
             <span key={f.id} className="frequent-chip">
               <button type="button" onClick={() => handleQuickAdd(f.term)}>
@@ -124,8 +122,8 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
                 type="button"
                 className="frequent-chip-remove"
                 onClick={() => handleForgetFavorite(f.id)}
-                title="Niet meer onthouden"
-                aria-label="Niet meer onthouden"
+                title={t("shopping.forgetTitle")}
+                aria-label={t("shopping.forgetTitle")}
               >
                 ×
               </button>
@@ -136,12 +134,12 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
 
       <div className="toolbar">
         <button onClick={handleCopy} disabled={items.length === 0}>
-          {copied ? "Gekopieerd!" : "Kopieer naar klembord"}
+          {copied ? t("shopping.copied") : t("shopping.copyButton")}
         </button>
       </div>
 
       {items.length === 0 ? (
-        <p className="status-text">Nog geen boodschappen voor deze week.</p>
+        <p className="status-text">{t("shopping.empty")}</p>
       ) : (
         <>
           <ul className="shopping-list-items">
@@ -152,8 +150,8 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
                   <button
                     className="danger"
                     onClick={() => handleRemoveExtra(item.extra_id)}
-                    title="Verwijderen"
-                    aria-label="Verwijderen"
+                    title={t("common.removeTitle")}
+                    aria-label={t("common.removeTitle")}
                   >
                     ×
                   </button>

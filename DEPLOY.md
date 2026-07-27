@@ -1,21 +1,21 @@
-# Installatiehandleiding — Ubuntu server
+# Installation guide — Ubuntu server
 
-Deze handleiding zet Weekmenu op een Ubuntu-server (getest voor
-Ubuntu 22.04/24.04) met Docker. Je hebt SSH-toegang tot de server nodig.
+This guide sets up Weekmenu on an Ubuntu server (tested on Ubuntu
+22.04/24.04) with Docker. You'll need SSH access to the server.
 
-## 1. Docker installeren op de server
+## 1. Install Docker on the server
 
-Log in op de server en installeer Docker Engine + de Compose-plugin via
-Docker's eigen apt-repository (aanbevolen boven de oudere `docker.io`-
-package uit de Ubuntu-repo's, die achterloopt in versie):
+Log in to the server and install Docker Engine + the Compose plugin via
+Docker's own apt repository (recommended over the older `docker.io`
+package from the Ubuntu repos, which lags behind in version):
 
 ```bash
-# Oude versies opruimen (indien aanwezig)
+# Remove old versions (if present)
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
   sudo apt-get remove -y $pkg
 done
 
-# Docker's repository toevoegen
+# Add Docker's repository
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -26,25 +26,25 @@ echo \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# Docker installeren
+# Install Docker
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Jezelf toevoegen aan de docker-groep (voorkomt dat je overal sudo nodig hebt)
+# Add yourself to the docker group (avoids needing sudo everywhere)
 sudo usermod -aG docker $USER
 ```
 
-Log daarna even uit en weer in (of `newgrp docker`) zodat de groepswijziging
-actief wordt. Controleer:
+Then log out and back in (or run `newgrp docker`) so the group change
+takes effect. Verify:
 
 ```bash
 docker --version
 docker compose version
 ```
 
-## 2. De code naar de server krijgen
+## 2. Getting the code onto the server
 
-Log in op de server via SSH en clone de repository:
+Log in to the server via SSH and clone the repository:
 
 ```bash
 mkdir -p ~/menuapp
@@ -52,79 +52,79 @@ cd ~/menuapp
 git clone https://github.com/WNijhof/MenuApp.git .
 ```
 
-Geen git beschikbaar, of liever handmatig kopiëren? Dan volstaat ook een
-`rsync`/`scp` van de projectmap vanaf je eigen computer, **op je eigen
-computer** gedraaid (niet op de server):
+No git available, or prefer to copy manually? An `rsync`/`scp` of the
+project folder works just as well, run **from your own computer** (not on
+the server):
 
 ```bash
 rsync -avz --exclude 'node_modules' --exclude '.venv' --exclude '__pycache__' \
-  "/pad/naar/Menuapp/" gebruiker@server-ip:~/menuapp/
+  "/path/to/Menuapp/" user@server-ip:~/menuapp/
 ```
 
-Vervang `gebruiker@server-ip` door je eigen SSH-gebruikersnaam en het
-IP-adres (of hostnaam) van je server.
+Replace `user@server-ip` with your own SSH username and your server's IP
+address (or hostname).
 
-## 3. Starten
+## 3. Starting
 
-Vanuit de projectmap op de server:
+From the project folder on the server:
 
 ```bash
 cd ~/menuapp
 docker compose up -d
 ```
 
-Elke push naar de `main`-branch bouwt de backend- en frontend-image
-automatisch en publiceert ze naar GitHub Container Registry — `docker
-compose up -d` **pullt** die kant-en-klare images dus in plaats van ze lokaal
-te bouwen, wat de eerste start een stuk sneller maakt. Controleer dat beide
-containers draaien:
+Every push to the `main` branch automatically builds the backend and
+frontend images and publishes them to the GitHub Container Registry —
+so `docker compose up -d` **pulls** those ready-made images instead of
+building them locally, which makes the first start a lot faster. Check
+that both containers are running:
 
 ```bash
 docker compose ps
 ```
 
-De app is nu bereikbaar op `http://<server-ip>:8080` vanaf elk apparaat in
-hetzelfde netwerk.
+The app is now reachable at `http://<server-ip>:8080` from any device on
+the same network.
 
-(Liever toch zelf bouwen vanaf de broncode, bv. na een lokale wijziging?
-Voeg `--build` toe: `docker compose up -d --build`.)
+(Prefer to build from source yourself, e.g. after a local change? Add
+`--build`: `docker compose up -d --build`.)
 
-Staat er een firewall aan (`sudo ufw status`)? Zet dan poort 8080 open:
+Is a firewall enabled (`sudo ufw status`)? Then open port 8080:
 
 ```bash
 sudo ufw allow 8080/tcp
 ```
 
-## 4. Eerste gebruik
+## 4. First use
 
-Recepten worden niet automatisch bij de eerste start opgehaald. Ga naar het
-tabblad **Bronnen** en klik op **Synchroniseer alle bronnen** — dit kan
-enkele minuten duren (de app haalt beleefd, met een kleine vertraging per
-pagina, honderden receptpagina's per bron op). Daarna draait er automatisch
-elke nacht om 03:00 een verse synchronisatie.
+Recipes aren't fetched automatically on first start. Go to the
+**Sources** tab and click **Sync all sources** — this can take a few
+minutes (the app fetches politely, with a small delay per page, hundreds
+of recipe pages per source). After that, a fresh sync runs automatically
+every night at 03:00.
 
-Stel daarna naar wens in:
-- **Uitsluitingen** — allergieën/dingen die je niet wilt eten
-- **Basisproducten** — wat je altijd in huis hebt (zout, olie, ...)
-- **Instellingen** — standaard aantal hoofd-/voor-/nagerechten per week
+Then configure to taste:
+- **Exclusions** — allergies/things you don't want to eat
+- **Pantry staples** — what you always have on hand (salt, oil, ...)
+- **Settings** — default number of mains/starters/desserts per week
 
-## 5. Updaten
+## 5. Updating
 
 ```bash
 cd ~/menuapp
-git pull                # of: opnieuw rsync'en als je zonder git werkt
-docker compose pull     # nieuwste gepubliceerde images ophalen
+git pull                # or: rsync again if you're not using git
+docker compose pull     # fetch the latest published images
 docker compose up -d
 ```
 
-Bestaande data (recepten, weekmenu's, instellingen) blijft behouden — die
-staat in een aparte Docker-volume (`menuapp-data`), niet in de
-containers zelf.
+Existing data (recipes, weekly menus, settings) is preserved — it lives
+in a separate Docker volume (`menuapp-data`), not in the containers
+themselves.
 
-## 6. Back-ups
+## 6. Backups
 
-Alle data zit in één SQLite-bestand binnen de `menuapp-data`-volume. Een
-back-up maken:
+All data lives in one SQLite file inside the `menuapp-data` volume.
+Making a backup:
 
 ```bash
 docker run --rm \
@@ -133,34 +133,35 @@ docker run --rm \
   alpine cp /data/menuapp.db /backup/menuapp-backup-$(date +%F).db
 ```
 
-(De volume-naam krijgt het projectmap-voorvoegsel, bv. `menuapp_menuapp-data`
-— check de exacte naam met `docker volume ls` als dit commando een fout
-geeft.) Terugzetten gaat met dezelfde aanpak, maar dan `cp` andersom.
+(The volume name gets the project-folder prefix, e.g.
+`menuapp_menuapp-data` — check the exact name with `docker volume ls` if
+this command errors.) Restoring works the same way, just with `cp`
+reversed.
 
-## Problemen oplossen
+## Troubleshooting
 
-Logs bekijken (bv. als de app niet bereikbaar is of een sync vastloopt):
+Viewing logs (e.g. if the app is unreachable or a sync gets stuck):
 
 ```bash
 docker compose logs -f backend
 docker compose logs -f frontend
 ```
 
-Container herstarten zonder opnieuw te bouwen:
+Restarting a container without rebuilding:
 
 ```bash
 docker compose restart backend
 ```
 
-Container draait niet? `docker compose ps` toont de status; een container
-die steeds herstart wijst meestal op een fout die in de logs staat.
+Container not running? `docker compose ps` shows the status; a container
+that keeps restarting usually points to an error visible in the logs.
 
-## 7. Optioneel: buiten je eigen netwerk bereikbaar maken
+## 7. Optional: making it reachable outside your own network
 
-Deze app heeft geen inlogscherm — bedoeld voor gebruik binnen je eigen
-netwerk. Wil je 'm ook buitenshuis kunnen gebruiken, zet er dan een
-reverse proxy met HTTPS *en* een vorm van toegangscontrole voor (bv.
-[Tailscale](https://tailscale.com/) om je apparaten in hetzelfde
-virtuele netwerk te krijgen zonder de app zelf publiek open te zetten, of
-anders Caddy/nginx met Let's Encrypt + Basic Auth ervoor). Dat valt buiten
-deze handleiding — vraag het gerust als je dat wil opzetten.
+This app has no login screen — it's meant for use within your own
+network. Want to use it away from home too? Put a reverse proxy with
+HTTPS *and* some form of access control in front of it (e.g.
+[Tailscale](https://tailscale.com/) to get your devices onto the same
+virtual network without exposing the app itself publicly, or otherwise
+Caddy/nginx with Let's Encrypt + Basic Auth in front). That's outside the
+scope of this guide — feel free to ask if you'd like help setting it up.

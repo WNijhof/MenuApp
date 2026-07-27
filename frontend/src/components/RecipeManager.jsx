@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { dishTypeLabel } from "../dishTypes.js";
-import { COURSE_LABELS, courseLabel } from "../courses.js";
+import { courseLabels, courseLabel } from "../courses.js";
+import { useTranslation } from "../i18n.jsx";
 
 export default function RecipeManager() {
+  const { t, language } = useTranslation();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -66,34 +68,32 @@ export default function RecipeManager() {
     }
   };
 
-  if (loading) return <p className="status-text">Recepten worden geladen…</p>;
+  if (loading) return <p className="status-text">{t("recipes.loading")}</p>;
 
   return (
     <div>
-      <p className="help-text">
-        Voeg een los recept toe via een directe link naar de receptpagina.
-      </p>
+      <p className="help-text">{t("recipes.help")}</p>
 
       {error && <p className="error-text">{error}</p>}
 
       <form className="inline-form" onSubmit={handleAdd}>
         <input
           type="url"
-          placeholder="https://voorbeeld.nl/recepten/mijn-recept"
+          placeholder={t("recipes.urlPlaceholder")}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
         <button type="submit" disabled={adding}>
-          {adding ? "Bezig…" : "Toevoegen"}
+          {adding ? t("common.busy") : t("common.add")}
         </button>
       </form>
 
       <div className="toolbar">
         <label>
-          Gang:{" "}
+          {t("recipes.courseFilterLabel")}{" "}
           <select value={courseFilter} onChange={handleCourseFilterChange}>
-            <option value="">Alle gangen</option>
-            {Object.entries(COURSE_LABELS).map(([value, label]) => (
+            <option value="">{t("recipes.allCourses")}</option>
+            {Object.entries(courseLabels(language)).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -102,15 +102,15 @@ export default function RecipeManager() {
         </label>
       </div>
 
-      <p className="status-text">{recipes.length} recepten in de database</p>
+      <p className="status-text">{t("recipes.count", { count: recipes.length })}</p>
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>Titel</th>
-            <th>Type</th>
-            <th>Gang</th>
-            <th>Waardering</th>
+            <th>{t("common.title")}</th>
+            <th>{t("common.dishType")}</th>
+            <th>{t("common.course")}</th>
+            <th>{t("recipes.rating")}</th>
             <th></th>
           </tr>
         </thead>
@@ -122,34 +122,34 @@ export default function RecipeManager() {
                   {recipe.title}
                 </a>
                 {recipe.has_offer && (
-                  <span className="offer-badge" title="Bevat een product dat nu in de aanbieding is">
-                    🏷️ aanbieding
+                  <span className="offer-badge" title={t("offer.badgeTitle")}>
+                    {t("offer.badgeText")}
                   </span>
                 )}
               </td>
-              <td>{dishTypeLabel(recipe.dish_type)}</td>
-              <td>{courseLabel(recipe.course)}</td>
+              <td>{dishTypeLabel(recipe.dish_type, language)}</td>
+              <td>{courseLabel(recipe.course, language)}</td>
               <td className="rating-buttons">
                 <button
                   className={recipe.rating === "like" ? "icon-button active" : "icon-button"}
                   onClick={() => handleRate(recipe, "like")}
-                  title="Favoriet"
-                  aria-label="Favoriet"
+                  title={t("day.favorite")}
+                  aria-label={t("day.favorite")}
                 >
                   👍
                 </button>
                 <button
                   className={recipe.rating === "dislike" ? "icon-button active" : "icon-button"}
                   onClick={() => handleRate(recipe, "dislike")}
-                  title="Niet lekker"
-                  aria-label="Niet lekker"
+                  title={t("day.dislike")}
+                  aria-label={t("day.dislike")}
                 >
                   👎
                 </button>
               </td>
               <td className="row-actions">
                 <button onClick={() => handleDelete(recipe)} className="danger">
-                  Verwijder
+                  {t("common.delete")}
                 </button>
               </td>
             </tr>

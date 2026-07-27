@@ -24,10 +24,12 @@ from app.config import (
     USER_AGENT,
 )
 from app.database import SessionLocal
+from app.i18n import t
 from app.models import Recipe, Source
 from app.services.categorizer import infer_course, infer_dish_type
 from app.services.lekkerensimpel_parser import parse_lekkerensimpel_recipe
 from app.services.recipe_parser import parse_recipe
+from app.services.settings import get_language
 
 logger = logging.getLogger("menuapp.scraper")
 
@@ -301,7 +303,7 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
     try:
         candidate_urls = discover_candidate_urls(source, source.max_pages, needs_fetch)
     except Exception as exc:  # noqa: BLE001 - surface any discovery failure
-        return 0, 0, 0, f"Kon sitemap niet lezen: {exc}"
+        return 0, 0, 0, t("sitemap_read_failed", get_language(db), error=exc)
 
     sitemap_was_empty = not candidate_urls
     if sitemap_was_empty:
@@ -407,7 +409,7 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
             pages_checked,
             recipes_new,
             recipes_updated,
-            "Geen recepten-URL's gevonden via sitemap.xml / robots.txt",
+            t("no_recipe_urls_found", get_language(db)),
         )
     return pages_checked, recipes_new, recipes_updated, None
 
@@ -439,7 +441,7 @@ def sync_source_by_id(source_id: int) -> dict | None:
                 0,
                 0,
                 0,
-                f"Onverwachte fout tijdens synchroniseren: {exc}",
+                t("unexpected_sync_error", get_language(db), error=exc),
             )
         source.last_synced_at = datetime.datetime.utcnow()
         source.last_sync_found = recipes_new

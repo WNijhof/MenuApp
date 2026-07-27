@@ -8,9 +8,11 @@ from sqlalchemy.orm import Session
 
 from app import schemas
 from app.database import get_db
+from app.i18n import t
 from app.models import Offer, Recipe
 from app.services.categorizer import normalize_offer_terms, recipe_matches_offers
 from app.services.scraper import fetch_single_recipe
+from app.services.settings import get_language
 
 router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
@@ -52,15 +54,14 @@ def add_recipe_by_url(payload: schemas.AddRecipeUrl, db: Session = Depends(get_d
     if existing:
         return schemas.RecipeOut.from_model(existing, has_offer=_has_offer(existing, _current_offer_terms(db)))
 
+    lang = get_language(db)
     try:
         parsed = fetch_single_recipe(payload.url)
     except requests.RequestException as exc:
-        raise HTTPException(400, f"Kon de pagina niet ophalen: {exc}")
+        raise HTTPException(400, t("fetch_page_failed", lang, error=exc))
 
     if not parsed:
-        raise HTTPException(
-            422, "Geen recept-gegevens (schema.org) gevonden op deze pagina."
-        )
+        raise HTTPException(422, t("no_recipe_data_found", lang))
 
     recipe = Recipe(
         source_id=None,
@@ -88,9 +89,9 @@ def add_recipe_by_url(payload: schemas.AddRecipeUrl, db: Session = Depends(get_d
 def rate_recipe(recipe_id: int, payload: schemas.RatingUpdate, db: Session = Depends(get_db)):
     recipe = db.get(Recipe, recipe_id)
     if not recipe:
-        raise HTTPException(404, "Recept niet gevonden")
+        raise HTTPException(404, t("recipe_not_found", get_language(db)))
     if payload.rating is not None and payload.rating not in VALID_RATINGS:
-        raise HTTPException(400, f"Ongeldige rating; moet 'like', 'dislike' of null zijn")
+        raise HTTPException(400, t("invalid_rating", get_language(db)))
 
     recipe.rating = payload.rating
     recipe.rated_at = datetime.datetime.utcnow() if payload.rating else None
@@ -103,7 +104,7 @@ def rate_recipe(recipe_id: int, payload: schemas.RatingUpdate, db: Session = Dep
 def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
     recipe = db.get(Recipe, recipe_id)
     if not recipe:
-        raise HTTPException(404, "Recept niet gevonden")
+        raise HTTPException(404, t("recipe_not_found", get_language(db)))
     db.delete(recipe)
     db.commit()
     return {"ok": True}

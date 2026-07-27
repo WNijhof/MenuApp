@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useTranslation } from "../i18n.jsx";
 import DayCard from "./DayCard.jsx";
 import LeftoverManager from "./LeftoverManager.jsx";
 import WeekPicker from "./WeekPicker.jsx";
@@ -7,6 +8,7 @@ import WeekPicker from "./WeekPicker.jsx";
 const DAYS_PER_WEEK = 7;
 
 export default function WeekView({ weekStartDate, onWeekChange }) {
+  const { t } = useTranslation();
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
@@ -55,8 +57,8 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
   const hasMenu = menuTotal > 0;
   // With fewer than 7 dishes requested, the open days aren't tied to real
   // weekdays (they're randomly interleaved server-side) - showing them as
-  // e.g. "Donderdag: geen recept" would be misleading, so just don't
-  // render placeholder cards or day names in that case.
+  // e.g. "Thursday: no recipe" would be misleading, so just don't render
+  // placeholder cards or day names in that case.
   const visibleDays = (menu?.days || []).filter((d) => isFullWeek || d.recipe);
 
   const handleCountChange = (course, value) => {
@@ -132,7 +134,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
     }
   };
 
-  if (loading) return <p className="status-text">Weekmenu wordt geladen…</p>;
+  if (loading) return <p className="status-text">{t("week.loading")}</p>;
 
   return (
     <div>
@@ -142,7 +144,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
 
       <div className="toolbar course-count-toolbar">
         <label>
-          Hoofdgerechten:{" "}
+          {t("course.mains")}:{" "}
           <input
             type="number"
             min="0"
@@ -153,7 +155,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
           />
         </label>
         <label>
-          Voorgerechten:{" "}
+          {t("course.starters")}:{" "}
           <input
             type="number"
             min="0"
@@ -164,7 +166,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
           />
         </label>
         <label>
-          Nagerechten:{" "}
+          {t("course.desserts")}:{" "}
           <input
             type="number"
             min="0"
@@ -175,31 +177,23 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
           />
         </label>
         <button onClick={handleRegenerate} disabled={regenerating || !countsValid || isFrozen}>
-          {regenerating ? "Bezig…" : "Genereer nieuwe week"}
+          {regenerating ? t("common.busy") : t("week.generate")}
         </button>
         {hasMenu && (
           <button
             className={isFrozen ? "active" : ""}
             onClick={handleToggleFrozen}
             disabled={freezing}
-            title={
-              isFrozen
-                ? "Ontdooi deze week om weer wijzigingen toe te staan"
-                : "Bevries deze week zodat er niets meer per ongeluk verandert (bijv. na het doen van de boodschappen)"
-            }
+            title={isFrozen ? t("week.unfreezeTitle") : t("week.freezeTitle")}
           >
-            {freezing ? "Bezig…" : isFrozen ? "❄️ Ontdooi week" : "Bevries week"}
+            {freezing ? t("common.busy") : isFrozen ? t("week.unfreeze") : t("week.freeze")}
           </button>
         )}
       </div>
       {!countsValid && (
-        <p className="error-text">Aantal gerechten kan niet meer dan {DAYS_PER_WEEK} zijn (nu {countsTotal}).</p>
+        <p className="error-text">{t("course.countTooHigh", { max: DAYS_PER_WEEK, count: countsTotal })}</p>
       )}
-      {isFrozen && (
-        <p className="status-text">
-          Deze week is bevroren — het menu wordt niet meer gewijzigd. Ontdooi de week om aanpassingen te doen.
-        </p>
-      )}
+      {isFrozen && <p className="status-text">{t("week.frozenNotice")}</p>}
 
       {error && <p className="error-text">{error}</p>}
       {menu?.warnings?.map((w, i) => (

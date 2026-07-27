@@ -185,12 +185,18 @@ class AppSettingsOut(BaseModel):
     default_hoofdgerecht: int
     default_voorgerecht: int
     default_nagerecht: int
+    background_color: str | None = None
+    accent_color: str | None = None
+    language: str = "en"
 
 
 class AppSettingsUpdate(BaseModel):
     default_hoofdgerecht: int
     default_voorgerecht: int
     default_nagerecht: int
+    background_color: str | None = None
+    accent_color: str | None = None
+    language: str = "en"
 
 
 class SyncResult(BaseModel):

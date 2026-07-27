@@ -480,6 +480,16 @@ button.danger {
   font-size: 0.9rem;
 }
 
+.course-count-toolbar input[type="color"] {
+  width: 2.5rem;
+  height: 2.2rem;
+  padding: 0.15rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+}
+
 .week-picker {
   display: flex;
   flex-wrap: wrap;

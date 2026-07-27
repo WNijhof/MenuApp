@@ -1,14 +1,15 @@
 import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabel } from "../courses.js";
+import { useTranslation } from "../i18n.jsx";
 
-const DAY_NAMES = [
-  "Maandag",
-  "Dinsdag",
-  "Woensdag",
-  "Donderdag",
-  "Vrijdag",
-  "Zaterdag",
-  "Zondag",
+const DAY_NAME_KEYS = [
+  "day.monday",
+  "day.tuesday",
+  "day.wednesday",
+  "day.thursday",
+  "day.friday",
+  "day.saturday",
+  "day.sunday",
 ];
 
 export default function DayCard({
@@ -20,16 +21,18 @@ export default function DayCard({
   showDayName = true,
   frozen = false,
 }) {
+  const { t, language } = useTranslation();
+
   return (
     <div className="day-card">
       <div className="day-card-header">
-        <span className="day-name">{showDayName ? DAY_NAMES[dayOfWeek] : ""}</span>
+        <span className="day-name">{showDayName ? t(DAY_NAME_KEYS[dayOfWeek]) : ""}</span>
         <button
           className="icon-button"
           onClick={onRefresh}
           disabled={refreshing || frozen}
-          title={frozen ? "Ontdooi de week om te wisselen" : "Wissel voor een ander recept"}
-          aria-label="Wissel voor een ander recept"
+          title={frozen ? t("day.rerollFrozen") : t("day.reroll")}
+          aria-label={t("day.reroll")}
         >
           {refreshing ? "…" : "↻"}
         </button>
@@ -44,14 +47,11 @@ export default function DayCard({
               <div className="day-card-image-placeholder" />
             )}
             <div className="day-card-info">
-              <span className="dish-type-badge">{dishTypeLabel(recipe.dish_type)}</span>
-              <span className="dish-type-badge">{courseLabel(recipe.course)}</span>
+              <span className="dish-type-badge">{dishTypeLabel(recipe.dish_type, language)}</span>
+              <span className="dish-type-badge">{courseLabel(recipe.course, language)}</span>
               {recipe.has_offer && (
-                <span
-                  className="offer-badge"
-                  title="Bevat een product dat nu in de aanbieding is"
-                >
-                  🏷️ aanbieding
+                <span className="offer-badge" title={t("offer.badgeTitle")}>
+                  {t("offer.badgeText")}
                 </span>
               )}
               <h3>{recipe.title}</h3>
@@ -65,16 +65,16 @@ export default function DayCard({
               <button
                 className={recipe.rating === "like" ? "icon-button active" : "icon-button"}
                 onClick={() => onRate("like")}
-                title="Favoriet"
-                aria-label="Favoriet"
+                title={t("day.favorite")}
+                aria-label={t("day.favorite")}
               >
                 👍
               </button>
               <button
                 className={recipe.rating === "dislike" ? "icon-button active" : "icon-button"}
                 onClick={() => onRate("dislike")}
-                title="Niet lekker"
-                aria-label="Niet lekker"
+                title={t("day.dislike")}
+                aria-label={t("day.dislike")}
               >
                 👎
               </button>
@@ -82,7 +82,7 @@ export default function DayCard({
           )}
         </>
       ) : (
-        <div className="day-card-empty">Geen recept beschikbaar</div>
+        <div className="day-card-empty">{t("day.noRecipe")}</div>
       )}
     </div>
   );

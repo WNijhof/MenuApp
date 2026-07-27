@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from app import schemas
 from app.database import get_db
+from app.i18n import t
 from app.models import FrequentItem, ShoppingListExtra
+from app.services.settings import get_language
 
 router = APIRouter(prefix="/api/shopping", tags=["shopping"])
 
@@ -12,7 +14,7 @@ router = APIRouter(prefix="/api/shopping", tags=["shopping"])
 def add_shopping_list_extra(payload: schemas.ShoppingListExtraCreate, db: Session = Depends(get_db)):
     text = payload.text.strip()
     if not text:
-        raise HTTPException(400, "Lege tekst")
+        raise HTTPException(400, t("empty_text", get_language(db)))
 
     extra = ShoppingListExtra(text=text)
     db.add(extra)
@@ -35,7 +37,7 @@ def add_shopping_list_extra(payload: schemas.ShoppingListExtraCreate, db: Sessio
 def delete_shopping_list_extra(extra_id: int, db: Session = Depends(get_db)):
     extra = db.get(ShoppingListExtra, extra_id)
     if not extra:
-        raise HTTPException(404, "Item niet gevonden")
+        raise HTTPException(404, t("item_not_found", get_language(db)))
     db.delete(extra)
     db.commit()
     return {"ok": True}
@@ -54,7 +56,7 @@ def list_frequent_items(db: Session = Depends(get_db)):
 def delete_frequent_item(item_id: int, db: Session = Depends(get_db)):
     item = db.get(FrequentItem, item_id)
     if not item:
-        raise HTTPException(404, "Item niet gevonden")
+        raise HTTPException(404, t("item_not_found", get_language(db)))
     db.delete(item)
     db.commit()
     return {"ok": True}

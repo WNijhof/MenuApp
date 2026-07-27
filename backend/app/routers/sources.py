@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 from app import schemas
 from app.config import MAX_CONCURRENT_SOURCE_SYNCS
 from app.database import get_db
+from app.i18n import t
 from app.models import Recipe, Source
 from app.services.scraper import sync_source, sync_source_by_id
+from app.services.settings import get_language
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 logger = logging.getLogger("menuapp.sources")
@@ -25,7 +27,7 @@ def _run_sync(db: Session, source: Source) -> tuple[int, int, int, str | None]:
     except Exception as exc:  # noqa: BLE001 - surface any sync failure
         db.rollback()
         logger.exception("Sync failed for source %s", source.name)
-        return 0, 0, 0, f"Onverwachte fout tijdens synchroniseren: {exc}"
+        return 0, 0, 0, t("unexpected_sync_error", get_language(db), error=exc)
 
 
 @router.get("", response_model=list[schemas.SourceOut])
@@ -66,7 +68,7 @@ def create_source(payload: schemas.SourceCreate, db: Session = Depends(get_db)):
 def update_source(source_id: int, payload: schemas.SourceUpdate, db: Session = Depends(get_db)):
     source = db.get(Source, source_id)
     if not source:
-        raise HTTPException(404, "Bron niet gevonden")
+        raise HTTPException(404, t("source_not_found", get_language(db)))
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(source, field, value)
     db.commit()
@@ -78,7 +80,7 @@ def update_source(source_id: int, payload: schemas.SourceUpdate, db: Session = D
 def delete_source(source_id: int, db: Session = Depends(get_db)):
     source = db.get(Source, source_id)
     if not source:
-        raise HTTPException(404, "Bron niet gevonden")
+        raise HTTPException(404, t("source_not_found", get_language(db)))
     db.delete(source)
     db.commit()
     return {"ok": True}
@@ -88,7 +90,7 @@ def delete_source(source_id: int, db: Session = Depends(get_db)):
 def sync_single_source(source_id: int, db: Session = Depends(get_db)):
     source = db.get(Source, source_id)
     if not source:
-        raise HTTPException(404, "Bron niet gevonden")
+        raise HTTPException(404, t("source_not_found", get_language(db)))
 
     import datetime
 
