@@ -13,22 +13,34 @@ TAXONOMY_PATH = Path(__file__).resolve().parent.parent / "data" / "taxonomy.json
 # Dish-style keywords checked first (title / category / keywords), in priority
 # order. These describe *how* a meal is prepared, independent of protein.
 DISH_STYLE_KEYWORDS: dict[str, list[str]] = {
-    "soep": ["soep", "bouillon"],
-    "salade": ["salade"],
-    "pasta": ["pasta", "spaghetti", "lasagne", "macaroni", "penne", "tagliatelle"],
+    "soep": ["soep", "bouillon", "soup", "broth", "chowder"],
+    "salade": ["salade", "salad"],
+    "pasta": [
+        "pasta", "spaghetti", "lasagne", "lasagna", "macaroni", "penne",
+        "tagliatelle", "fettuccine", "linguine", "ravioli", "gnocchi",
+        "mac and cheese",
+    ],
     "aziatisch-wok": [
         "wok", "roerbak", "aziatisch", "chinees", "thai", "indonesisch",
         "noedel", "noedels", "nasi", "bami", "pad thai", "sushi",
+        "asian", "chinese", "thai", "indonesian", "japanese", "korean",
+        "vietnamese", "noodle", "noodles", "stir-fry", "stir fry",
+        "teriyaki", "ramen",
     ],
-    "curry-indiaas": ["curry", "indiaas", "masala", "tikka", "dal"],
+    "curry-indiaas": [
+        "curry", "indiaas", "masala", "tikka", "dal",
+        "indian", "korma", "vindaloo", "biryani", "curried",
+    ],
     "ovenschotel-stoof": [
         "ovenschotel", "oven schotel", "stoofpot", "stoofvlees", "stamppot",
         "gratin", "uit de oven",
+        "casserole", "stew", "traybake", "tray bake", "one-pot",
+        "one pot", "pot pie", "hotpot", "hot pot",
     ],
     "pizza": ["pizza"],
-    "taco-wrap": ["taco", "wrap", "burrito", "quesadilla", "fajita"],
+    "taco-wrap": ["taco", "wrap", "burrito", "quesadilla", "fajita", "enchilada"],
     "risotto": ["risotto"],
-    "bbq-grill": ["bbq", "barbecue", "grill"],
+    "bbq-grill": ["bbq", "barbecue", "grill", "grilled"],
 }
 
 # Protein-based fallback categories, matched against ingredients via the
@@ -53,14 +65,25 @@ COURSE_KEYWORDS: dict[str, list[str]] = {
         "mousse", "trifle", "milkshake", "taart", "cake", "gebak",
         "sprits", "wafel", "bonbon", "banket", "kruidnoot", "kruidnoten",
         "pepernoot", "pepernoten", "gebakje",
+        "ice cream", "sorbet", "pie", "tart", "pastry", "shortbread",
+        "custard", "fudge", "sundae", "pavlova", "tiramisu",
     ],
     "voorgerecht": [
         "voorgerecht", "amuse", "borrelhapje", "borrelhapjes", "tapas",
         "carpaccio", "hapje", "hapjes",
+        "starter", "starters", "appetizer", "appetizers", "appetiser",
+        "appetisers", "hors d'oeuvre",
     ],
-    "hoofdgerecht": ["hoofdgerecht", "hoofdgang", "main course", "maaltijd"],
+    "hoofdgerecht": [
+        "hoofdgerecht", "hoofdgang", "main course", "maaltijd",
+        "main dish", "main meal", "dinner",
+    ],
 }
-_EXACT_TOKEN_COURSE_TERMS = {"gebak", "koekjes"}
+# "tart" needs a whole-word match, not the usual compound/plural substring
+# match: as a substring it also hits "starter" and "tartaar"/"tartare"
+# (steak tartare, a starter/main - not a dessert), which would otherwise
+# misclassify those as nagerecht.
+_EXACT_TOKEN_COURSE_TERMS = {"gebak", "koekjes", "tart"}
 
 
 def _strip_accents(text: str) -> str:
@@ -93,6 +116,14 @@ def _tokenize(text: str) -> list[str]:
     return _WORD_RE.findall(text)
 
 
+# Terms that are a plain prefix of a common, unrelated word - substring-
+# within-token matching would otherwise false-positive on those (e.g. "port"
+# inside "portobello", which is itself a taxonomy term for mushrooms).
+# Needs the same whole-word treatment as the <=3-char terms below even
+# though it's longer.
+_EXACT_TOKEN_TERMS = {"port"}
+
+
 def _term_matches(tokens: list[str], full_text: str, term: str) -> bool:
     """Dutch ingredient text is full of compounds ('varkenshaasmedaillons')
     and irregular plurals ('kipfilets'), so a strict whole-word match misses
@@ -107,7 +138,7 @@ def _term_matches(tokens: list[str], full_text: str, term: str) -> bool:
         return False
     if " " in term or "-" in term:
         return term in full_text
-    if len(term) <= 3:
+    if len(term) <= 3 or term in _EXACT_TOKEN_TERMS:
         return term in tokens or f"{term}s" in tokens or f"{term}en" in tokens
     return any(term in tok for tok in tokens)
 

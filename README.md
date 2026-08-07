@@ -2,7 +2,9 @@
 
 Self-hosted web app for putting together your weekly menu. Fetches recipes
 from the sites you configure yourself (pre-filled by default with the Dutch
-recipe sites from [kadaza.nl/recepten](https://www.kadaza.nl/recepten)),
+recipe sites from [kadaza.nl/recepten](https://www.kadaza.nl/recepten) —
+add your own English-language sources too if you like, exclusion and
+categorization both recognize Dutch and English ingredient names),
 randomly fills 7 days with variety in dish type, and takes into account
 ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
 

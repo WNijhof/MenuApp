@@ -4,67 +4,108 @@
     "haring", "makreel", "schol", "heilbot", "pangasius", "kibbeling",
     "sardine", "sardientjes", "ansjovis", "paling", "tilapia", "koolvis",
     "wijting", "zeebaars", "poon", "schelvis", "snoekbaars", "meeval",
-    "viskuit", "kuit", "surimi", "vissticks", "visstick"
+    "viskuit", "kuit", "surimi", "vissticks", "visstick",
+    "fish", "fish fillet", "cod", "salmon", "smoked salmon", "tuna", "trout",
+    "herring", "mackerel", "halibut", "sardines", "anchovy", "anchovies",
+    "eel", "haddock", "sea bass", "snapper", "swordfish", "fish sticks",
+    "fish fingers", "fish cakes"
   ],
   "schaal-schelpdieren": [
     "garnaal", "garnalen", "mossel", "mosselen", "oester", "oesters",
     "kreeft", "krab", "krabvlees", "inktvis", "calamares", "calamari",
-    "octopus", "sint-jakobsschelp", "sint jakobsschelpen", "scampi", "gamba", "gambas"
+    "octopus", "sint-jakobsschelp", "sint jakobsschelpen", "scampi", "gamba", "gambas",
+    "shrimp", "shrimps", "prawn", "prawns", "mussel", "mussels", "oyster",
+    "oysters", "lobster", "crab", "crab meat", "crabmeat", "squid",
+    "scallop", "scallops", "clam", "clams"
   ],
   "rund": [
     "rundvlees", "rund", "biefstuk", "ossenhaas", "gehakt", "rundergehakt",
     "runderlappen", "entrecote", "ribeye", "ossenstaart", "runderrollade",
-    "rosbief", "sucadelappen"
+    "rosbief", "sucadelappen",
+    "beef", "ground beef", "beef mince", "minced beef", "steak", "sirloin",
+    "tenderloin", "brisket", "roast beef", "beef stew meat"
   ],
   "varken": [
     "varkensvlees", "varken", "spek", "spekjes", "bacon", "procureur",
     "varkenshaas", "krabbetjes", "varkenslapje", "varkensfilet",
-    "varkensgehakt", "hamlap", "buikspek", "chorizo", "salami", "ham"
+    "varkensgehakt", "hamlap", "buikspek", "chorizo", "salami", "ham",
+    "pork", "pork tenderloin", "pork chop", "pork chops", "pork mince",
+    "ground pork", "pork belly", "pork shoulder", "pancetta", "prosciutto"
   ],
   "kip": [
     "kip", "kipfilet", "kippendij", "kippenpoot", "kippenbout",
     "gevogelte", "kipdij", "kiplapje", "kippenvleugel", "kalkoen",
-    "kalkoenfilet", "eend", "eendenborst"
+    "kalkoenfilet", "eend", "eendenborst",
+    "chicken", "chicken breast", "chicken breasts", "chicken thigh",
+    "chicken thighs", "chicken drumstick", "chicken drumsticks",
+    "chicken wing", "chicken wings", "chicken mince", "ground chicken",
+    "poultry", "turkey", "turkey breast", "ground turkey", "duck",
+    "duck breast"
   ],
   "lam": [
-    "lam", "lamsvlees", "lamskotelet", "lamsbout", "lamsrack"
+    "lam", "lamsvlees", "lamskotelet", "lamsbout", "lamsrack",
+    "lamb", "lamb chop", "lamb chops", "leg of lamb", "rack of lamb",
+    "ground lamb", "lamb mince"
   ],
   "noten": [
     "noot", "noten", "amandel", "amandelen", "cashewnoot", "cashewnoten",
     "hazelnoot", "hazelnoten", "walnoot", "walnoten", "pinda", "pinda's",
-    "pindakaas", "pistache", "pistachenoten", "macadamia", "pecannoot", "pecannoten"
+    "pindakaas", "pistache", "pistachenoten", "macadamia", "pecannoot", "pecannoten",
+    "nut", "nuts", "almond", "almonds", "cashew", "cashews", "hazelnut",
+    "hazelnuts", "walnut", "walnuts", "peanut", "peanuts", "peanut butter",
+    "pistachio", "pistachios", "pecan", "pecans"
   ],
   "gluten": [
     "tarwe", "tarwebloem", "bloem", "brood", "broodkruim", "paneermeel",
     "pasta", "spaghetti", "macaroni", "penne", "tagliatelle", "lasagnebladen",
-    "couscous", "gerst", "rogge", "spelt", "noedels", "udon", "ramen"
+    "couscous", "gerst", "rogge", "spelt", "noedels", "udon", "ramen",
+    "wheat", "wheat flour", "flour", "all-purpose flour", "bread",
+    "breadcrumbs", "panko", "barley", "rye", "noodles", "lasagne sheets",
+    "lasagna sheets"
   ],
   "zuivel": [
     "melk", "room", "slagroom", "kookroom", "kaas", "geraspte kaas",
     "boter", "roomboter", "yoghurt", "griekse yoghurt", "kwark",
     "creme fraiche", "crème fraîche", "mascarpone", "ricotta", "mozzarella",
-    "parmezaan", "parmezaanse kaas", "feta"
+    "parmezaan", "parmezaanse kaas", "feta",
+    "milk", "cream", "heavy cream", "whipping cream", "sour cream",
+    "cheese", "grated cheese", "shredded cheese", "butter", "yogurt",
+    "greek yogurt", "cream cheese", "parmesan", "parmesan cheese",
+    "cheddar", "buttermilk"
   ],
   "ei": [
-    "ei", "eieren", "eiwit", "eiwitten", "eidooier", "eidooiers"
+    "ei", "eieren", "eiwit", "eiwitten", "eidooier", "eidooiers",
+    "egg", "eggs", "egg white", "egg whites", "egg yolk", "egg yolks"
   ],
   "peulvruchten": [
     "boon", "bonen", "witte bonen", "bruine bonen", "kidneybonen",
     "zwarte bonen", "linze", "linzen", "kikkererwt", "kikkererwten",
-    "erwt", "erwten", "sojaboon", "sojabonen", "edamame"
+    "erwt", "erwten", "sojaboon", "sojabonen", "edamame",
+    "bean", "beans", "white beans", "kidney beans", "black beans",
+    "cannellini beans", "lentil", "lentils", "chickpea", "chickpeas",
+    "garbanzo beans", "pea", "peas", "split peas", "soybean", "soybeans"
   ],
   "paddenstoelen": [
     "champignon", "champignons", "paddenstoel", "paddenstoelen",
-    "cantharel", "cantharellen", "oesterzwam", "shiitake", "portobello"
+    "cantharel", "cantharellen", "oesterzwam", "shiitake", "portobello",
+    "mushroom", "mushrooms", "button mushrooms", "chanterelle",
+    "chanterelles", "oyster mushroom", "oyster mushrooms", "porcini"
   ],
   "ui-look": [
-    "ui", "uien", "rode ui", "knoflook", "sjalot", "sjalotten", "bosui", "prei"
+    "ui", "uien", "rode ui", "knoflook", "sjalot", "sjalotten", "bosui", "prei",
+    "onion", "onions", "red onion", "yellow onion", "garlic", "shallot",
+    "shallots", "scallion", "scallions", "spring onion", "spring onions",
+    "green onion", "green onions", "leek", "leeks"
   ],
   "alcohol": [
     "wijn", "rode wijn", "witte wijn", "bier", "rum", "cognac", "sherry",
-    "port", "likeur", "madeira", "calvados"
+    "port", "likeur", "madeira", "calvados",
+    "wine", "red wine", "white wine", "beer", "brandy", "liqueur",
+    "sherry vinegar", "vermouth", "whisky", "whiskey", "bourbon"
   ],
   "vegetarisch-vervangers": [
-    "tofu", "tempeh", "seitan", "quorn", "vega gehakt", "vegetarische worst"
+    "tofu", "tempeh", "seitan", "quorn", "vega gehakt", "vegetarische worst",
+    "meat substitute", "plant-based mince", "vegetarian mince",
+    "vegan mince", "veggie sausage", "veggie burger"
   ]
 }

@@ -55,6 +55,11 @@ class Recipe(Base):
     keywords: Mapped[str | None] = mapped_column(Text, nullable=True)
     ingredients_json: Mapped[str] = mapped_column(Text, default="[]")
     instructions_json: Mapped[str] = mapped_column(Text, default="[]")
+    # 'nl' or 'en' - the language the recipe's own text is written in (from
+    # the site's schema.org `inLanguage` when present, otherwise guessed;
+    # see services/language_detect.py). Used to translate ingredient lines
+    # to the UI language on the shopping list regardless of recipe language.
+    language: Mapped[str | None] = mapped_column(String(5), nullable=True)
     prep_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cook_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     total_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -150,6 +155,30 @@ class Offer(Base):
     discount_label: Mapped[str | None] = mapped_column(String(50), nullable=True)
     valid_until: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
     scraped_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=datetime.datetime.utcnow
+    )
+
+
+class TranslationCache(Base):
+    """Caches ingredient-line translations (see services/translator.py) so
+    the same line is only ever sent to the translation API once, keyed on
+    the exact text plus language pair rather than just the text - the same
+    Dutch line should never need re-translating once it's in the cache for
+    a given target language."""
+
+    __tablename__ = "translation_cache"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_text", "source_lang", "target_lang", name="uq_translation_cache"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_text: Mapped[str] = mapped_column(Text)
+    source_lang: Mapped[str] = mapped_column(String(5))
+    target_lang: Mapped[str] = mapped_column(String(5))
+    translated_text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, default=datetime.datetime.utcnow
     )
 

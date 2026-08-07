@@ -2,10 +2,10 @@
 // /api/exclusions/taxonomy. The underlying key (submitted as the exclusion
 // term itself) stays the taxonomy.json key - only how it's shown changes
 // with the UI language. The taxonomy's actual matching synonyms
-// (kabeljauw, zalm, ...) intentionally stay Dutch regardless of UI
-// language, since they're matched against ingredient text scraped from
-// Dutch recipe sites - translating those would silently break exclusion
-// matching.
+// (kabeljauw, zalm, salmon, cod, ...) include both Dutch and English words
+// regardless of UI language, since recipes can come from either Dutch or
+// English sources and ingredient text is matched as scraped, not
+// translated.
 const TAXONOMY_CATEGORY_LABELS = {
   en: {
     vis: "Fish",

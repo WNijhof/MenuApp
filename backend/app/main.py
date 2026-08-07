@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, SessionLocal, engine
-from app.models import Source
+from app.models import Recipe, Source
 from app.routers import (
     exclusions,
     leftovers,
@@ -19,6 +19,7 @@ from app.routers import (
     sources,
 )
 from app.scheduler import start_scheduler
+from app.services.language_detect import detect_language
 
 SEED_SOURCES_PATH = Path(__file__).resolve().parent / "data" / "seed_sources.json"
 
@@ -30,6 +31,10 @@ _COLUMN_MIGRATIONS = [
     ("recipes", "course", "VARCHAR(20) DEFAULT 'hoofdgerecht'"),
     ("recipes", "rating", "VARCHAR(10)"),
     ("recipes", "rated_at", "DATETIME"),
+    # No DEFAULT on purpose - NULL here is what marks a pre-existing recipe
+    # as needing the one-time detection backfill below. Every insert going
+    # forward (scraper.py, routers/recipes.py) always sets this explicitly.
+    ("recipes", "language", "VARCHAR(5)"),
     ("week_menus", "course_counts_json", "TEXT DEFAULT '{}'"),
     ("week_menus", "frozen", "BOOLEAN DEFAULT 0"),
     ("app_settings", "background_color", "VARCHAR(20)"),
@@ -47,6 +52,33 @@ def _run_light_migrations():
             if column not in existing_columns:
                 conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
         conn.commit()
+
+
+def _backfill_recipe_language():
+    """One-time detection pass for recipes scraped before Recipe.language
+    existed (see the migration entry above) - runs on every startup but is
+    a no-op past the first one, since every write path sets the field
+    explicitly from then on. Only heuristic detection is available here
+    (no page HTML left to re-read a schema.org `inLanguage` hint from); a
+    future re-sync will correct anything this guesses wrong."""
+    db = SessionLocal()
+    try:
+        recipes_to_backfill = db.query(Recipe).filter(Recipe.language.is_(None)).all()
+        for recipe in recipes_to_backfill:
+            text = " ".join(
+                filter(
+                    None,
+                    [
+                        recipe.title,
+                        *json.loads(recipe.instructions_json or "[]"),
+                        *json.loads(recipe.ingredients_json or "[]"),
+                    ],
+                )
+            )
+            recipe.language = detect_language(text)
+        db.commit()
+    finally:
+        db.close()
 
 
 def _seed_sources_if_empty():
@@ -67,6 +99,7 @@ def _seed_sources_if_empty():
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     _run_light_migrations()
+    _backfill_recipe_language()
     _seed_sources_if_empty()
     start_scheduler()
     yield

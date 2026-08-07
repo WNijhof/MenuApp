@@ -96,6 +96,18 @@ def _extract_instructions(recipe_obj) -> list[str]:
     return steps
 
 
+def _extract_language_hint(recipe_obj) -> str | None:
+    """schema.org's `inLanguage` (e.g. 'en-US', 'nl') as a bare 2-letter
+    code, when it's one this app actually supports - an explicit signal
+    from the site itself, preferred over guessing (see
+    language_detect.resolve_language)."""
+    raw = _first_str(recipe_obj.get("inLanguage"))
+    if not raw:
+        return None
+    code = raw.strip().lower().split("-")[0]
+    return code if code in ("nl", "en") else None
+
+
 def _extract_keywords(recipe_obj) -> str | None:
     kw = recipe_obj.get("keywords")
     if isinstance(kw, list):
@@ -168,6 +180,7 @@ def parse_recipe(url: str, html: str) -> dict | None:
         "cuisine": _first_str(recipe_obj.get("recipeCuisine")),
         "category": _first_str(recipe_obj.get("recipeCategory")),
         "keywords": _extract_keywords(recipe_obj),
+        "language_hint": _extract_language_hint(recipe_obj),
         "ingredients": ingredients,
         "instructions": _extract_instructions(recipe_obj),
         "prep_time_minutes": parse_iso8601_duration_minutes(

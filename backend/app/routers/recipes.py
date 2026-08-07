@@ -72,6 +72,7 @@ def add_recipe_by_url(payload: schemas.AddRecipeUrl, db: Session = Depends(get_d
         course=parsed["course"],
         cuisine=parsed["cuisine"],
         keywords=parsed["keywords"],
+        language=parsed["language"],
         ingredients_json=json.dumps(parsed["ingredients"]),
         instructions_json=json.dumps(parsed["instructions"]),
         prep_time_minutes=parsed["prep_time_minutes"],

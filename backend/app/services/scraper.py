@@ -27,6 +27,7 @@ from app.database import SessionLocal
 from app.i18n import t
 from app.models import Recipe, Source
 from app.services.categorizer import infer_course, infer_dish_type
+from app.services.language_detect import resolve_language
 from app.services.lekkerensimpel_parser import parse_lekkerensimpel_recipe
 from app.services.recipe_parser import parse_recipe
 from app.services.settings import get_language
@@ -59,6 +60,17 @@ def _parse_with_fallbacks(url: str, html: str) -> dict | None:
         return parsed
     fallback = _DOMAIN_FALLBACK_PARSERS.get(urlparse(url).netloc.lower())
     return fallback(url, html) if fallback else None
+
+
+def _recipe_language(parsed: dict) -> str:
+    """`language_hint` (schema.org `inLanguage`) is only set by the generic
+    parser - domain fallback parsers (e.g. lekkerensimpel_parser, which is
+    Dutch-only anyway) simply have none, and fall straight through to
+    heuristic detection on the recipe's own text."""
+    text = " ".join(
+        filter(None, [parsed["title"], *parsed["instructions"], *parsed["ingredients"]])
+    )
+    return resolve_language(parsed.get("language_hint"), text)
 
 
 def _root_url(url: str) -> str:
@@ -377,6 +389,7 @@ def sync_source(db: Session, source: Source) -> tuple[int, int, int, str | None]
         target.course = course
         target.cuisine = parsed["cuisine"]
         target.keywords = parsed["keywords"]
+        target.language = _recipe_language(parsed)
         target.ingredients_json = json.dumps(parsed["ingredients"])
         target.instructions_json = json.dumps(parsed["instructions"])
         target.prep_time_minutes = parsed["prep_time_minutes"]
@@ -468,4 +481,5 @@ def fetch_single_recipe(url: str) -> dict | None:
         parsed["title"], parsed["category"], parsed["keywords"], parsed["ingredients"]
     )
     parsed["course"] = infer_course(parsed["title"], parsed["category"], parsed["keywords"])
+    parsed["language"] = _recipe_language(parsed)
     return parsed
