@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabel } from "../courses.js";
 import { useTranslation } from "../i18n.jsx";
+import RecipeDetailModal from "./RecipeDetailModal.jsx";
 
 const DAY_NAME_KEYS = [
   "day.monday",
@@ -16,50 +18,109 @@ export default function DayCard({
   dayOfWeek,
   recipe,
   onRefresh,
+  onRefreshQuery,
   refreshing,
   onRate,
   showDayName = true,
   frozen = false,
 }) {
   const { t, language } = useTranslation();
+  const [showSwapSearch, setShowSwapSearch] = useState(false);
+  const [swapQuery, setSwapQuery] = useState("");
+  const [showDetail, setShowDetail] = useState(false);
+
+  const handleSwapSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!swapQuery.trim()) return;
+    onRefreshQuery(swapQuery.trim());
+    setSwapQuery("");
+    setShowSwapSearch(false);
+  };
 
   return (
     <div className="day-card">
       <div className="day-card-header">
         <span className="day-name">{showDayName ? t(DAY_NAME_KEYS[dayOfWeek]) : ""}</span>
-        <button
-          className="icon-button"
-          onClick={onRefresh}
-          disabled={refreshing || frozen}
-          title={frozen ? t("day.rerollFrozen") : t("day.reroll")}
-          aria-label={t("day.reroll")}
-        >
-          {refreshing ? "…" : "↻"}
-        </button>
+        <div className="day-card-header-actions">
+          {onRefreshQuery && (
+            <button
+              className={showSwapSearch ? "icon-button active" : "icon-button"}
+              onClick={() => setShowSwapSearch((v) => !v)}
+              disabled={frozen}
+              title={frozen ? t("day.rerollFrozen") : t("day.swapToType")}
+              aria-label={t("day.swapToType")}
+            >
+              🔍
+            </button>
+          )}
+          <button
+            className="icon-button"
+            onClick={onRefresh}
+            disabled={refreshing || frozen}
+            title={frozen ? t("day.rerollFrozen") : t("day.reroll")}
+            aria-label={t("day.reroll")}
+          >
+            {refreshing ? "…" : "↻"}
+          </button>
+        </div>
       </div>
+
+      {showSwapSearch && (
+        <form className="day-card-swap-search" onSubmit={handleSwapSearchSubmit}>
+          <input
+            type="text"
+            autoFocus
+            placeholder={t("day.swapToTypePlaceholder")}
+            value={swapQuery}
+            onChange={(e) => setSwapQuery(e.target.value)}
+          />
+          <button type="submit" disabled={refreshing}>
+            {refreshing ? t("common.busy") : t("day.swapToTypeButton")}
+          </button>
+        </form>
+      )}
 
       {recipe ? (
         <>
-          <a className="day-card-body" href={recipe.url} target="_blank" rel="noreferrer">
-            {recipe.image_url ? (
-              <img src={recipe.image_url} alt="" loading="lazy" />
-            ) : (
-              <div className="day-card-image-placeholder" />
-            )}
-            <div className="day-card-info">
-              <span className="dish-type-badge">{dishTypeLabel(recipe.dish_type, language)}</span>
-              <span className="dish-type-badge">{courseLabel(recipe.course, language)}</span>
-              {recipe.has_offer && (
-                <span className="offer-badge" title={t("offer.badgeTitle")}>
-                  {t("offer.badgeText")}
-                </span>
+          {recipe.is_manual ? (
+            <button
+              type="button"
+              className="day-card-body day-card-body-button"
+              onClick={() => setShowDetail(true)}
+            >
+              {recipe.image_url ? (
+                <img src={recipe.image_url} alt="" loading="lazy" />
+              ) : (
+                <div className="day-card-image-placeholder" />
               )}
-              <h3>{recipe.title}</h3>
-              {recipe.total_time_minutes ? (
-                <span className="time-badge">{recipe.total_time_minutes} min</span>
-              ) : null}
-            </div>
-          </a>
+              <div className="day-card-info">
+                <span className="dish-type-badge">{dishTypeLabel(recipe.dish_type, language)}</span>
+                <span className="dish-type-badge">{courseLabel(recipe.course, language)}</span>
+                <h3>{recipe.title}</h3>
+              </div>
+            </button>
+          ) : (
+            <a className="day-card-body" href={recipe.url} target="_blank" rel="noreferrer">
+              {recipe.image_url ? (
+                <img src={recipe.image_url} alt="" loading="lazy" />
+              ) : (
+                <div className="day-card-image-placeholder" />
+              )}
+              <div className="day-card-info">
+                <span className="dish-type-badge">{dishTypeLabel(recipe.dish_type, language)}</span>
+                <span className="dish-type-badge">{courseLabel(recipe.course, language)}</span>
+                {recipe.has_offer && (
+                  <span className="offer-badge" title={t("offer.badgeTitle")}>
+                    {t("offer.badgeText")}
+                  </span>
+                )}
+                <h3>{recipe.title}</h3>
+                {recipe.total_time_minutes ? (
+                  <span className="time-badge">{recipe.total_time_minutes} min</span>
+                ) : null}
+              </div>
+            </a>
+          )}
           {onRate && (
             <div className="rating-buttons day-card-rating">
               <button
@@ -84,6 +145,8 @@ export default function DayCard({
       ) : (
         <div className="day-card-empty">{t("day.noRecipe")}</div>
       )}
+
+      {showDetail && recipe && <RecipeDetailModal recipe={recipe} onClose={() => setShowDetail(false)} />}
     </div>
   );
 }

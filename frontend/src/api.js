@@ -39,13 +39,13 @@ export const api = {
           ? JSON.stringify({ course_counts: courseCounts, week_start_date: weekStartDate })
           : undefined,
     }),
-  refreshDay: (dayOfWeek, weekStartDate) =>
-    request(
-      weekStartDate
-        ? `/menu/day/${dayOfWeek}/refresh?week_start_date=${weekStartDate}`
-        : `/menu/day/${dayOfWeek}/refresh`,
-      { method: "POST" }
-    ),
+  refreshDay: (dayOfWeek, weekStartDate, query) => {
+    const params = new URLSearchParams();
+    if (weekStartDate) params.set("week_start_date", weekStartDate);
+    if (query) params.set("query", query);
+    const qs = params.toString();
+    return request(`/menu/day/${dayOfWeek}/refresh${qs ? `?${qs}` : ""}`, { method: "POST" });
+  },
   setWeekFrozen: (weekStartDate, frozen) =>
     request(`/menu/${weekStartDate}/freeze`, {
       method: "PATCH",
@@ -70,6 +70,10 @@ export const api = {
   },
   addRecipeByUrl: (url) =>
     request("/recipes/add-url", { method: "POST", body: JSON.stringify({ url }) }),
+  addManualRecipe: (payload) =>
+    request("/recipes/manual", { method: "POST", body: JSON.stringify(payload) }),
+  updateManualRecipe: (id, payload) =>
+    request(`/recipes/${id}/manual`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteRecipe: (id) => request(`/recipes/${id}`, { method: "DELETE" }),
   rateRecipe: (id, rating) =>
     request(`/recipes/${id}/rating`, { method: "PATCH", body: JSON.stringify({ rating }) }),

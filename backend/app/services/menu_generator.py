@@ -13,6 +13,7 @@ from app.models import ExclusionRule, Leftover, Offer, Recipe, WeekMenu, WeekMen
 from app.services.categorizer import (
     normalize_offer_terms,
     normalize_terms,
+    normalize_text,
     recipe_matches_exclusions,
     recipe_matches_offers,
 )
@@ -269,23 +270,47 @@ def generate_week_menu(
     return week_menu
 
 
+def _recipe_matches_query(recipe: Recipe, query_words: list[str]) -> bool:
+    """A loose "does this recipe look like what the user typed" check
+    (e.g. 'lasagne', 'gehaktbal') against title/keywords/cuisine - the same
+    freeform fields a recipe's own site would use, unlike dish_type which
+    is too coarse-grained for a specific dish name. All words must appear
+    (as a substring, so Dutch compounds/plurals still match) - AND rather
+    than OR, so a two-word query like 'kip curry' doesn't match every
+    recipe that merely contains chicken."""
+    text = normalize_text(" ".join(filter(None, [recipe.title, recipe.keywords, recipe.cuisine])))
+    return all(word in text for word in query_words)
+
+
 def refresh_day(
-    db: Session, week_menu: WeekMenu, day_of_week: int, lang: str = "en"
+    db: Session, week_menu: WeekMenu, day_of_week: int, lang: str = "en", query: str | None = None
 ) -> tuple[WeekMenuDay, str | None]:
-    """Swap the recipe on one day for a different random pick of the same
-    course, preferring a dish type that differs from the neighbouring
-    days."""
+    """Swap the recipe on one day for a different pick of the same course.
+    Without `query`, picks randomly, preferring a dish type that differs
+    from the neighbouring days (as before). With `query` (e.g. 'lasagne',
+    'gehaktbal'), narrows the candidate pool to recipes whose title/
+    keywords/cuisine match it - a deliberate, specific request, so unlike
+    the random path it also ignores the recent-use cooldown: a user typing
+    a dish name wants that dish, not to be told it's too soon to repeat it,
+    and the match itself is often narrow enough that the cooldown would
+    leave nothing to pick from at all."""
     day_row = next(d for d in week_menu.days if d.day_of_week == day_of_week)
     target_course = day_row.recipe.course if day_row.recipe else "hoofdgerecht"
 
     available = get_available_recipes(db)
     same_course = [r for r in available if r.course == target_course]
-    if not same_course:
+
+    query_words = [w for w in normalize_text(query).split() if w] if query else []
+    if query_words:
+        same_course = [r for r in same_course if _recipe_matches_query(r, query_words)]
+        if not same_course:
+            return day_row, t("no_recipe_matches_query", lang, query=query.strip())
+    elif not same_course:
         warning = t("no_other_recipes_for_course", lang, course=target_course)
         return day_row, warning
 
     preferred_ids = _preferred_recipe_ids(db, available)
-    recent_ids = _recently_used_recipe_ids(db, week_menu.week_start_date)
+    recent_ids = set() if query_words else _recently_used_recipe_ids(db, week_menu.week_start_date)
 
     used_recipe_ids = {d.recipe_id for d in week_menu.days if d.recipe_id}
     used_recipe_ids.discard(day_row.recipe_id)

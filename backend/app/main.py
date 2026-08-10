@@ -40,6 +40,7 @@ _COLUMN_MIGRATIONS = [
     ("app_settings", "background_color", "VARCHAR(20)"),
     ("app_settings", "accent_color", "VARCHAR(20)"),
     ("app_settings", "language", "VARCHAR(5) DEFAULT 'en'"),
+    ("recipes", "is_manual", "BOOLEAN DEFAULT 0"),
 ]
 
 

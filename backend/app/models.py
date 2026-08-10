@@ -55,6 +55,11 @@ class Recipe(Base):
     keywords: Mapped[str | None] = mapped_column(Text, nullable=True)
     ingredients_json: Mapped[str] = mapped_column(Text, default="[]")
     instructions_json: Mapped[str] = mapped_column(Text, default="[]")
+    # True for recipes typed in by hand (routers/recipes.py's /manual
+    # endpoints) rather than scraped from a source or added by URL - these
+    # have no real page behind their `url` (see add_manual_recipe), so the
+    # frontend uses this flag to show/edit them in-app instead of linking out.
+    is_manual: Mapped[bool] = mapped_column(Boolean, default=False)
     # 'nl' or 'en' - the language the recipe's own text is written in (from
     # the site's schema.org `inLanguage` when present, otherwise guessed;
     # see services/language_detect.py). Used to translate ingredient lines

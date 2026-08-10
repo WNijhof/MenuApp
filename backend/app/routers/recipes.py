@@ -1,5 +1,6 @@
 import datetime
 import json
+import uuid
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,13 +11,39 @@ from app import schemas
 from app.database import get_db
 from app.i18n import t
 from app.models import Offer, Recipe
-from app.services.categorizer import normalize_offer_terms, recipe_matches_offers
+from app.services.categorizer import infer_course, infer_dish_type, normalize_offer_terms, recipe_matches_offers
+from app.services.language_detect import detect_language
 from app.services.scraper import fetch_single_recipe
 from app.services.settings import get_language
 
 router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
 VALID_RATINGS = {"like", "dislike"}
+VALID_COURSES = {"voorgerecht", "hoofdgerecht", "nagerecht"}
+
+
+def _clean_lines(lines: list[str]) -> list[str]:
+    return [line.strip() for line in lines if line.strip()]
+
+
+def _apply_manual_payload(recipe: Recipe, payload: schemas.RecipeManualCreate, lang: str) -> None:
+    title = payload.title.strip()
+    ingredients = _clean_lines(payload.ingredients)
+    instructions = _clean_lines(payload.instructions)
+    if not title:
+        raise HTTPException(400, t("recipe_title_required", lang))
+    if not ingredients:
+        raise HTTPException(400, t("recipe_ingredients_required", lang))
+    if payload.course is not None and payload.course not in VALID_COURSES:
+        raise HTTPException(400, t("invalid_course", lang))
+
+    recipe.title = title
+    recipe.ingredients_json = json.dumps(ingredients)
+    recipe.instructions_json = json.dumps(instructions)
+    recipe.servings = payload.servings.strip() if payload.servings else None
+    recipe.dish_type = infer_dish_type(title, None, None, ingredients)
+    recipe.course = payload.course or infer_course(title, None, None)
+    recipe.language = detect_language(" ".join([title, *ingredients, *instructions]))
 
 
 def _current_offer_terms(db: Session) -> list[str]:
@@ -81,6 +108,35 @@ def add_recipe_by_url(payload: schemas.AddRecipeUrl, db: Session = Depends(get_d
         servings=parsed["servings"],
     )
     db.add(recipe)
+    db.commit()
+    db.refresh(recipe)
+    return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_terms(db)))
+
+
+@router.post("/manual", response_model=schemas.RecipeOut)
+def add_manual_recipe(payload: schemas.RecipeManualCreate, db: Session = Depends(get_db)):
+    lang = get_language(db)
+    # No real page behind a hand-typed recipe, so `url` (unique + required,
+    # see models.Recipe) gets a synthetic placeholder instead - never
+    # rendered as a clickable link by the frontend (is_manual gates that).
+    recipe = Recipe(source_id=None, url=f"manual:{uuid.uuid4()}", is_manual=True)
+    _apply_manual_payload(recipe, payload, lang)
+    db.add(recipe)
+    db.commit()
+    db.refresh(recipe)
+    return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_terms(db)))
+
+
+@router.patch("/{recipe_id}/manual", response_model=schemas.RecipeOut)
+def update_manual_recipe(recipe_id: int, payload: schemas.RecipeManualCreate, db: Session = Depends(get_db)):
+    lang = get_language(db)
+    recipe = db.get(Recipe, recipe_id)
+    if not recipe:
+        raise HTTPException(404, t("recipe_not_found", lang))
+    if not recipe.is_manual:
+        raise HTTPException(400, t("recipe_not_manual", lang))
+
+    _apply_manual_payload(recipe, payload, lang)
     db.commit()
     db.refresh(recipe)
     return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_terms(db)))

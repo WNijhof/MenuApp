@@ -81,12 +81,12 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
     }
   };
 
-  const handleRefreshDay = async (dayOfWeek) => {
+  const handleRefreshDay = async (dayOfWeek, query) => {
     setRefreshingDay(dayOfWeek);
     setError(null);
     setDayWarning(null);
     try {
-      const updatedDay = await api.refreshDay(dayOfWeek, menu?.week_start_date);
+      const updatedDay = await api.refreshDay(dayOfWeek, menu?.week_start_date, query);
       setMenu((prev) => ({
         ...prev,
         days: prev.days.map((d) =>
@@ -211,6 +211,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             recipe={day.recipe}
             refreshing={refreshingDay === day.day_of_week}
             onRefresh={() => handleRefreshDay(day.day_of_week)}
+            onRefreshQuery={(query) => handleRefreshDay(day.day_of_week, query)}
             onRate={(rating) => handleRateDay(day.day_of_week, day.recipe, rating)}
             showDayName={isFullWeek}
             frozen={isFrozen}

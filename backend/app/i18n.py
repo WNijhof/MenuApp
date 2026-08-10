@@ -72,6 +72,26 @@ MESSAGES: dict[str, dict[str, str]] = {
         "en": "Recipe not found",
         "nl": "Recept niet gevonden",
     },
+    "recipe_title_required": {
+        "en": "Title is required",
+        "nl": "Titel is verplicht",
+    },
+    "recipe_ingredients_required": {
+        "en": "At least one ingredient is required",
+        "nl": "Minstens één ingrediënt is verplicht",
+    },
+    "recipe_not_manual": {
+        "en": "This recipe wasn't added manually and can't be edited this way",
+        "nl": "Dit recept is niet handmatig toegevoegd en kan zo niet bewerkt worden",
+    },
+    "invalid_course": {
+        "en": "Invalid course",
+        "nl": "Ongeldige gang",
+    },
+    "no_recipe_matches_query": {
+        "en": "No recipe found matching \"{query}\".",
+        "nl": "Geen recept gevonden dat overeenkomt met \"{query}\".",
+    },
     "invalid_rating": {
         "en": "Invalid rating; must be 'like', 'dislike' or null",
         "nl": "Ongeldige rating; moet 'like', 'dislike' of null zijn",

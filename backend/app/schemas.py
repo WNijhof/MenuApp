@@ -52,6 +52,7 @@ class RecipeOut(BaseModel):
     total_time_minutes: int | None
     servings: str | None
     has_offer: bool = False
+    is_manual: bool = False
 
     @staticmethod
     def from_model(recipe, has_offer: bool = False):
@@ -74,11 +75,20 @@ class RecipeOut(BaseModel):
             total_time_minutes=recipe.total_time_minutes,
             servings=recipe.servings,
             has_offer=has_offer,
+            is_manual=recipe.is_manual,
         )
 
 
 class AddRecipeUrl(BaseModel):
     url: str
+
+
+class RecipeManualCreate(BaseModel):
+    title: str
+    ingredients: list[str]
+    instructions: list[str]
+    servings: str | None = None
+    course: str | None = None
 
 
 class RatingUpdate(BaseModel):

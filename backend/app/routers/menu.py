@@ -169,7 +169,10 @@ def get_menu_history(db: Session = Depends(get_db)):
 
 @router.post("/day/{day_of_week}/refresh", response_model=schemas.WeekMenuDayOut)
 def refresh_menu_day(
-    day_of_week: int, week_start_date: datetime.date | None = None, db: Session = Depends(get_db)
+    day_of_week: int,
+    week_start_date: datetime.date | None = None,
+    query: str | None = None,
+    db: Session = Depends(get_db),
 ):
     lang = get_language(db)
     if day_of_week < 0 or day_of_week > 6:
@@ -179,7 +182,7 @@ def refresh_menu_day(
     week_menu, _ = _get_or_generate_week_menu(db, week_start)
     _require_not_frozen(week_menu, lang)
 
-    day_row, warning = refresh_day(db, week_menu, day_of_week, lang)
+    day_row, warning = refresh_day(db, week_menu, day_of_week, lang, query=query)
     offer_terms = _current_offer_terms(db)
     result = schemas.WeekMenuDayOut(
         day_of_week=day_row.day_of_week,
