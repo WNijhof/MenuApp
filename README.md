@@ -12,14 +12,18 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
 
 - **Multi-source recipe scraping** — add any recipe site with a sitemap and
   schema.org/Recipe markup; no site-specific scraper code needed.
+- **Your own recipes** — type in a recipe by hand (title, ingredients,
+  steps) instead of importing it from a site; its ingredients flow into
+  the shopping list exactly like any scraped recipe.
 - **Smart exclusions** — exclude a whole category (fish, nuts, pork,
   dairy, ...) or a single ingredient; categories automatically expand to all
   their synonyms.
 - **Weekly menu generation** — randomly fills 7 days with variety across
   dish types and courses (starter/main/dessert), honoring your exclusions.
-- **Day rerolls & ratings** — swap out a single day's recipe, or like/dislike
-  recipes to steer future selections (disliked recipes are never suggested
-  again).
+- **Day rerolls & ratings** — swap out a single day's recipe (either a
+  random pick, or a specific kind of dish you type in, e.g. "lasagna"),
+  or like/dislike recipes to steer future selections (disliked recipes are
+  never suggested again).
 - **Week freezing** — lock a week's menu once the groceries are done, so it
   can't be regenerated or changed by accident.
 - **Automatic shopping list** — built from the week's recipes with
@@ -57,8 +61,10 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
 - **Weekly menu**: the 7 days are filled randomly, spread across different
   dish types (soup, pasta, fish, meat, vegetarian, ...) so the week doesn't
   keep serving the same kind of dish. Use the ↻ button on a day to swap that
-  one recipe for another. Once you've done the groceries for a week, freeze
-  it to protect it from accidental changes.
+  one recipe for a random other one, or the 🔍 button to swap it for a
+  specific kind of dish instead — type e.g. "lasagna" or "tomato soup" and
+  it searches your own recipe library for a match. Once you've done the
+  groceries for a week, freeze it to protect it from accidental changes.
 
 ## Getting started (Docker)
 
@@ -186,7 +192,11 @@ found for that source — that's a limitation of the site itself, not
 something to configure.
 
 Individual recipes (one specific page) can be added directly via the
-**Recipes** tab → add by URL.
+**Recipes** tab → add by URL. Don't have a page to link to? Use the
+**Recipes** tab's "Add manually" option instead to type in a recipe
+yourself — title, ingredients (one per line) and steps; it behaves just
+like any other recipe (shows up in the weekly menu, its ingredients land
+on the shopping list, etc.).
 
 ## Local development (without Docker)
 
