@@ -7,6 +7,7 @@ import re
 import unicodedata
 from functools import lru_cache
 from pathlib import Path
+from typing import NamedTuple
 
 TAXONOMY_PATH = Path(__file__).resolve().parent.parent / "data" / "taxonomy.json"
 
@@ -194,36 +195,69 @@ def normalize_offer_terms(offer_names: list[str]) -> list[str]:
     return words
 
 
+class TermMatcher(NamedTuple):
+    """Terms pre-split by which check they need (see _term_matches), so
+    matching many recipes against the same term list only pays the
+    classification cost once instead of on every single recipe - see
+    compile_terms."""
+
+    exact: tuple[str, ...]
+    phrase: tuple[str, ...]
+    substring: tuple[str, ...]
+
+    def matches(self, ingredients: list[str]) -> bool:
+        if not (self.exact or self.phrase or self.substring):
+            return False
+        full_text = normalize_text(" | ".join(ingredients))
+        if any(term in full_text for term in self.phrase):
+            return True
+        tokens = set(_tokenize(full_text))
+        if any(
+            term in tokens or f"{term}s" in tokens or f"{term}en" in tokens
+            for term in self.exact
+        ):
+            return True
+        return any(term in tok for term in self.substring for tok in tokens)
+
+
+def compile_terms(terms: list[str]) -> TermMatcher:
+    """Classifies (and dedupes) a normalized term list once. Callers
+    matching many recipes against the same term list (see
+    _preferred_recipe_ids, get_available_recipes, _has_offer) should call
+    this once and reuse the result via TermMatcher.matches, rather than
+    re-deriving the same classification (and re-scanning every ingredient
+    token) on every single recipe - that's the dominant cost when checking
+    e.g. hundreds of offer terms against thousands of recipes."""
+    exact: list[str] = []
+    phrase: list[str] = []
+    substring: list[str] = []
+    for term in dict.fromkeys(t for t in terms if t):
+        if " " in term or "-" in term:
+            phrase.append(term)
+        elif len(term) <= 3 or term in _EXACT_TOKEN_TERMS:
+            exact.append(term)
+        else:
+            substring.append(term)
+    return TermMatcher(tuple(exact), tuple(phrase), tuple(substring))
+
+
 def _any_normalized_term_matches(ingredients: list[str], normalized_terms: list[str]) -> bool:
-    if not normalized_terms:
-        return False
-    full_text = normalize_text(" | ".join(ingredients))
-    tokens = _tokenize(full_text)
-    return any(_term_matches(tokens, full_text, word) for word in normalized_terms)
+    return compile_terms(normalized_terms).matches(ingredients)
 
 
 def _any_term_matches(ingredients: list[str], terms: list[str]) -> bool:
     return _any_normalized_term_matches(ingredients, normalize_terms(terms))
 
 
-def recipe_matches_exclusions(ingredients: list[str], exclusion_terms: list[str]) -> bool:
-    if not exclusion_terms:
-        return False
+def compile_exclusion_terms(exclusion_terms: list[str]) -> TermMatcher:
+    """expand_exclusion_term already returns normalized words (from
+    load_taxonomy/normalize_text), so this skips the raw-term
+    normalize_terms step _any_term_matches does for terms that haven't
+    been normalized yet."""
     banned_words: set[str] = set()
     for term in exclusion_terms:
         banned_words.update(expand_exclusion_term(term))
-    return _any_term_matches(ingredients, list(banned_words))
-
-
-def recipe_matches_offers(ingredients: list[str], normalized_offer_names: list[str]) -> bool:
-    """Also used for leftover matching (both are a literal, non-expanding
-    match against the recipe's ingredient text - unlike exclusions, which
-    expand a taxonomy category into all its synonyms). Takes pre-normalized
-    terms (via normalize_terms) rather than raw ones - this is meant to be
-    called once per recipe across a possibly-large batch, where
-    re-normalizing the same term list on every call would dominate the
-    runtime."""
-    return _any_normalized_term_matches(ingredients, normalized_offer_names)
+    return compile_terms(list(banned_words))
 
 
 def ingredient_matches_pantry(ingredient: str, pantry_terms: list[str]) -> bool:

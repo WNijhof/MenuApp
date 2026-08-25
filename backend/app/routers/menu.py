@@ -8,7 +8,7 @@ from app import schemas
 from app.database import get_db
 from app.i18n import t
 from app.models import Offer, WeekMenu, WeekMenuDay
-from app.services.categorizer import normalize_offer_terms, recipe_matches_offers
+from app.services.categorizer import TermMatcher, compile_terms, normalize_offer_terms
 from app.services.menu_generator import DAYS_PER_WEEK, generate_week_menu, refresh_day
 from app.services.settings import default_course_counts, get_language
 from app.services.shopping_list import build_shopping_list
@@ -31,27 +31,25 @@ def _resolve_week_start(week_start_date: datetime.date | None) -> datetime.date:
     return _week_start_for(week_start_date) if week_start_date else _current_week_start()
 
 
-def _current_offer_terms(db: Session) -> list[str]:
-    return normalize_offer_terms([row.name for row in db.query(Offer).all()])
+def _current_offer_matcher(db: Session) -> TermMatcher:
+    return compile_terms(normalize_offer_terms([row.name for row in db.query(Offer).all()]))
 
 
-def _recipe_out_with_offer(recipe, offer_terms: list[str]) -> schemas.RecipeOut:
-    has_offer = bool(offer_terms) and recipe_matches_offers(
-        json.loads(recipe.ingredients_json or "[]"), offer_terms
-    )
+def _recipe_out_with_offer(recipe, offer_matcher: TermMatcher) -> schemas.RecipeOut:
+    has_offer = offer_matcher.matches(json.loads(recipe.ingredients_json or "[]"))
     return schemas.RecipeOut.from_model(recipe, has_offer=has_offer)
 
 
 def _to_week_menu_out(
-    week_menu: WeekMenu, warnings: list[str] | None = None, offer_terms: list[str] | None = None
+    week_menu: WeekMenu, warnings: list[str] | None = None, offer_matcher: TermMatcher | None = None
 ) -> schemas.WeekMenuOut:
-    offer_terms = offer_terms or []
+    offer_matcher = offer_matcher or compile_terms([])
     days = []
     for day in sorted(week_menu.days, key=lambda d: d.day_of_week):
         days.append(
             schemas.WeekMenuDayOut(
                 day_of_week=day.day_of_week,
-                recipe=_recipe_out_with_offer(day.recipe, offer_terms) if day.recipe else None,
+                recipe=_recipe_out_with_offer(day.recipe, offer_matcher) if day.recipe else None,
             )
         )
     return schemas.WeekMenuOut(
@@ -127,7 +125,7 @@ def _get_or_generate_week_menu(
 def get_current_menu(week_start_date: datetime.date | None = None, db: Session = Depends(get_db)):
     week_start = _resolve_week_start(week_start_date)
     week_menu, warnings = _get_or_generate_week_menu(db, week_start, persist=False)
-    return _to_week_menu_out(week_menu, warnings, _current_offer_terms(db))
+    return _to_week_menu_out(week_menu, warnings, _current_offer_matcher(db))
 
 
 @router.get("/current/shopping-list", response_model=schemas.ShoppingListOut)
@@ -157,14 +155,14 @@ def generate_menu(
         lang,
         clear_leftovers=week_start == _current_week_start(),
     )
-    return _to_week_menu_out(week_menu, getattr(week_menu, "warnings", []), _current_offer_terms(db))
+    return _to_week_menu_out(week_menu, getattr(week_menu, "warnings", []), _current_offer_matcher(db))
 
 
 @router.get("/history", response_model=list[schemas.WeekMenuOut])
 def get_menu_history(db: Session = Depends(get_db)):
     week_menus = db.query(WeekMenu).order_by(WeekMenu.week_start_date.desc()).all()
-    offer_terms = _current_offer_terms(db)
-    return [_to_week_menu_out(w, offer_terms=offer_terms) for w in week_menus]
+    offer_matcher = _current_offer_matcher(db)
+    return [_to_week_menu_out(w, offer_matcher=offer_matcher) for w in week_menus]
 
 
 @router.post("/day/{day_of_week}/refresh", response_model=schemas.WeekMenuDayOut)
@@ -183,10 +181,10 @@ def refresh_menu_day(
     _require_not_frozen(week_menu, lang)
 
     day_row, warning = refresh_day(db, week_menu, day_of_week, lang, query=query)
-    offer_terms = _current_offer_terms(db)
+    offer_matcher = _current_offer_matcher(db)
     result = schemas.WeekMenuDayOut(
         day_of_week=day_row.day_of_week,
-        recipe=_recipe_out_with_offer(day_row.recipe, offer_terms) if day_row.recipe else None,
+        recipe=_recipe_out_with_offer(day_row.recipe, offer_matcher) if day_row.recipe else None,
         warning=warning,
     )
     return result
@@ -206,7 +204,7 @@ def set_week_frozen(
     week_menu.frozen = payload.frozen
     db.commit()
     db.refresh(week_menu)
-    return _to_week_menu_out(week_menu, offer_terms=_current_offer_terms(db))
+    return _to_week_menu_out(week_menu, offer_matcher=_current_offer_matcher(db))
 
 
 @router.delete("/{week_start_date}")

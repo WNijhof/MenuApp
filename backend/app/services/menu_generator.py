@@ -11,11 +11,11 @@ from sqlalchemy.orm import Session
 from app.i18n import t
 from app.models import ExclusionRule, Leftover, Offer, Recipe, WeekMenu, WeekMenuDay
 from app.services.categorizer import (
+    compile_exclusion_terms,
+    compile_terms,
     normalize_offer_terms,
     normalize_terms,
     normalize_text,
-    recipe_matches_exclusions,
-    recipe_matches_offers,
 )
 
 DAYS_PER_WEEK = 7
@@ -63,10 +63,14 @@ def get_available_recipes(db: Session) -> list[Recipe]:
     all_recipes = [r for r in db.query(Recipe).all() if r.rating != "dislike"]
     if not exclusion_terms:
         return all_recipes
+    # Compiled once and reused for every recipe below, rather than
+    # re-expanding the same taxonomy terms per recipe (see
+    # categorizer.compile_exclusion_terms).
+    matcher = compile_exclusion_terms(exclusion_terms)
     return [
         r
         for r in all_recipes
-        if not recipe_matches_exclusions(json.loads(r.ingredients_json or "[]"), exclusion_terms)
+        if not matcher.matches(json.loads(r.ingredients_json or "[]"))
     ]
 
 
@@ -84,12 +88,19 @@ def _preferred_recipe_ids(db: Session, recipes: list[Recipe]) -> set[int]:
     runtime (measured ~5x speedup for offers)."""
     leftover_terms = normalize_terms([row.term for row in db.query(Leftover).all()])
     offer_terms = normalize_offer_terms([row.name for row in db.query(Offer).all()])
+    if not leftover_terms and not offer_terms:
+        return set()
+    # Compiled once and reused for every recipe below - see
+    # categorizer.compile_terms for why that matters against hundreds of
+    # offer terms and thousands of recipes.
+    leftover_matcher = compile_terms(leftover_terms)
+    offer_matcher = compile_terms(offer_terms)
     preferred = set()
     for r in recipes:
         ingredients = json.loads(r.ingredients_json or "[]")
-        if leftover_terms and recipe_matches_offers(ingredients, leftover_terms):
+        if leftover_terms and leftover_matcher.matches(ingredients):
             preferred.add(r.id)
-        elif offer_terms and recipe_matches_offers(ingredients, offer_terms):
+        elif offer_terms and offer_matcher.matches(ingredients):
             preferred.add(r.id)
     return preferred
 
