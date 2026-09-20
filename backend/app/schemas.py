@@ -133,6 +133,26 @@ class WeekMenuDayOut(BaseModel):
     day_of_week: int
     recipe: RecipeOut | None
     warning: str | None = None
+    pinned: bool = False
+    cooked: bool = False
+    skip_shopping: bool = False
+
+
+class DayFlagsUpdate(BaseModel):
+    pinned: bool | None = None
+    cooked: bool | None = None
+    skip_shopping: bool | None = None
+
+
+class SetDayRecipe(BaseModel):
+    recipe_id: int
+
+
+class RecipeSuggestion(BaseModel):
+    id: int
+    title: str
+    dish_type: str
+    course: str
 
 
 class WeekMenuOut(BaseModel):
@@ -155,6 +175,7 @@ class GenerateMenuRequest(BaseModel):
 class ShoppingListItemOut(BaseModel):
     text: str
     extra_id: int | None = None  # set only for manually-added items (removable)
+    section: str = "other"  # supermarket section, see data/store_sections.json
 
 
 class ShoppingListOut(BaseModel):

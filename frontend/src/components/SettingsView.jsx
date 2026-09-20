@@ -7,7 +7,7 @@ const DAYS_PER_WEEK = 7;
 
 export default function SettingsView() {
   const { t, language, setLanguage } = useTranslation();
-  const [counts, setCounts] = useState({ hoofdgerecht: 7, voorgerecht: 0, nagerecht: 0 });
+  const [counts, setCounts] = useState({ hoofdgerecht: 5, voorgerecht: 0, nagerecht: 0 });
   const [colors, setColors] = useState({ background_color: null, accent_color: null });
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [loading, setLoading] = useState(true);

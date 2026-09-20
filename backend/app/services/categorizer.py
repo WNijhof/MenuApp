@@ -209,9 +209,16 @@ class TermMatcher(NamedTuple):
         if not (self.exact or self.phrase or self.substring):
             return False
         full_text = normalize_text(" | ".join(ingredients))
+        return self.matches_normalized(full_text, set(_tokenize(full_text)))
+
+    def matches_normalized(self, full_text: str, tokens) -> bool:
+        """Same check on text that was already normalized/tokenized once
+        (see services/recipe_index.py), so scanning the whole collection
+        doesn't redo that work per recipe on every request."""
+        if not (self.exact or self.phrase or self.substring):
+            return False
         if any(term in full_text for term in self.phrase):
             return True
-        tokens = set(_tokenize(full_text))
         if any(
             term in tokens or f"{term}s" in tokens or f"{term}en" in tokens
             for term in self.exact

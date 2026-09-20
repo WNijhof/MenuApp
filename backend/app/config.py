@@ -3,6 +3,14 @@ import os
 DATABASE_PATH = os.environ.get("DATABASE_PATH", "./menuapp.db")
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
+# Recipe thumbnails live next to the database file so they survive container
+# rebuilds on the same /data volume (see services/thumbnails.py).
+THUMBNAIL_DIR = os.environ.get(
+    "THUMBNAIL_DIR",
+    os.path.join(os.path.dirname(os.path.abspath(DATABASE_PATH)), "thumbs"),
+)
+THUMBNAIL_MAX_SIZE = 320
+
 # Polite scraping defaults - keep low to avoid hammering third-party sites.
 # This governs the pace *within* one source's crawl only - it does not
 # change when multiple different sources are synced concurrently (see

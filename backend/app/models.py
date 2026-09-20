@@ -195,7 +195,7 @@ class AppSettings(Base):
     __tablename__ = "app_settings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    default_hoofdgerecht: Mapped[int] = mapped_column(Integer, default=7)
+    default_hoofdgerecht: Mapped[int] = mapped_column(Integer, default=5)
     default_voorgerecht: Mapped[int] = mapped_column(Integer, default=0)
     default_nagerecht: Mapped[int] = mapped_column(Integer, default=0)
     background_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -234,6 +234,15 @@ class WeekMenuDay(Base):
     recipe_id: Mapped[int | None] = mapped_column(
         ForeignKey("recipes.id"), nullable=True
     )
+    # Per-day flags, all reset whenever the day's recipe changes:
+    # pinned - survives regenerating the week / changing the dish counts;
+    # cooked - ticked off once made (shown greyed out; also survives a
+    #          regenerate, since a dish already cooked shouldn't vanish);
+    # skip_shopping - this dish's ingredients are left off the shopping list
+    #          (eating out, everything already at home, ...).
+    pinned: Mapped[bool] = mapped_column(Boolean, default=False)
+    cooked: Mapped[bool] = mapped_column(Boolean, default=False)
+    skip_shopping: Mapped[bool] = mapped_column(Boolean, default=False)
 
     week_menu: Mapped["WeekMenu"] = relationship(back_populates="days")
     recipe: Mapped["Recipe | None"] = relationship()

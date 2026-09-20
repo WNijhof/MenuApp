@@ -1,4 +1,5 @@
 import json
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from app.routers import (
     sources,
 )
 from app.scheduler import start_scheduler
+from app.services import recipe_index, thumbnails
 from app.services.language_detect import detect_language
 
 SEED_SOURCES_PATH = Path(__file__).resolve().parent / "data" / "seed_sources.json"
@@ -41,6 +43,9 @@ _COLUMN_MIGRATIONS = [
     ("app_settings", "accent_color", "VARCHAR(20)"),
     ("app_settings", "language", "VARCHAR(5) DEFAULT 'en'"),
     ("recipes", "is_manual", "BOOLEAN DEFAULT 0"),
+    ("week_menu_days", "pinned", "BOOLEAN DEFAULT 0"),
+    ("week_menu_days", "cooked", "BOOLEAN DEFAULT 0"),
+    ("week_menu_days", "skip_shopping", "BOOLEAN DEFAULT 0"),
 ]
 
 
@@ -82,6 +87,22 @@ def _backfill_recipe_language():
         db.close()
 
 
+def _warm_recipe_index():
+    """Build the in-memory recipe index (and its exclusion/offer caches) in
+    the background at startup so the first swap of the day isn't the one
+    that pays for it."""
+
+    def warm():
+        db = SessionLocal()
+        try:
+            recipe_index.available_recipes(db)
+            recipe_index.preferred_recipe_ids(db)
+        finally:
+            db.close()
+
+    threading.Thread(target=warm, name="recipe-index-warmup", daemon=True).start()
+
+
 def _seed_sources_if_empty():
     db = SessionLocal()
     try:
@@ -102,6 +123,8 @@ async def lifespan(app: FastAPI):
     _run_light_migrations()
     _backfill_recipe_language()
     _seed_sources_if_empty()
+    _warm_recipe_index()
+    thumbnails.start()
     start_scheduler()
     yield
 

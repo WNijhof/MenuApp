@@ -705,3 +705,140 @@ button.danger {
   font-size: 0.9rem;
   line-height: 1.6;
 }
+
+/* --- pinned / cooked / skipped days ------------------------------------ */
+
+.day-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.day-card-cooked-check {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--accent, #3a7ca5);
+}
+
+.day-card-cooked .day-card-body,
+.day-card-cooked .day-card-rating {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.day-card-cooked .day-card-info h3 {
+  text-decoration: line-through;
+}
+
+.day-card-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem 0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* --- recipe type-ahead --------------------------------------------------- */
+
+.day-card-swap-search {
+  display: block;
+}
+
+.recipe-autocomplete input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.recipe-autocomplete-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  max-height: 14rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.recipe-autocomplete-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.recipe-autocomplete-list li.highlighted {
+  background: var(--border);
+}
+
+.recipe-autocomplete-type {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.recipe-autocomplete-empty {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* --- shopping list sections ---------------------------------------------- */
+
+.shopping-section-heading {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.shopping-sections .shopping-list-items {
+  margin-bottom: 0;
+}
+
+/* --- recipe list --------------------------------------------------------- */
+
+.recipe-search-input {
+  flex: 1;
+  min-width: 12rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.recipe-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  vertical-align: middle;
+  margin-right: 0.6rem;
+  background: var(--border);
+}
+
+.recipe-thumb-empty {
+  display: inline-block;
+}

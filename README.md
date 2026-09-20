@@ -18,17 +18,27 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
 - **Smart exclusions** — exclude a whole category (fish, nuts, pork,
   dairy, ...) or a single ingredient; categories automatically expand to all
   their synonyms.
-- **Weekly menu generation** — randomly fills 7 days with variety across
-  dish types and courses (starter/main/dessert), honoring your exclusions.
-- **Day rerolls & ratings** — swap out a single day's recipe (either a
-  random pick, or a specific kind of dish you type in, e.g. "lasagna"),
+- **Weekly menu generation** — randomly fills the week (5 dishes by
+  default, configurable) with variety across dish types and courses
+  (starter/main/dessert), honoring your exclusions.
+- **Pin, cook, skip** — 📌 pin dishes so they survive generating a new
+  week or changing the number of dishes; tick a dish off as cooked (it
+  greys out and also stays put); or keep a dish's ingredients off the
+  shopping list (eating out, already have everything).
+- **Instant swaps** — ↻ and 👎 show the replacement immediately: a spare is
+  kept ready per day and saved in the background. The 🔍 button offers
+  type-ahead over every recipe title in the database.
+- **Day rerolls & ratings** — swap out a single day's recipe (a random
+  pick, a recipe picked by name, or a keyword search such as "lasagna"),
   or like/dislike recipes to steer future selections (disliked recipes are
   never suggested again).
 - **Week freezing** — lock a week's menu once the groceries are done, so it
   can't be regenerated or changed by accident.
 - **Automatic shopping list** — built from the week's recipes with
-  duplicate ingredients merged, plus one-off extras and quick-add frequent
-  items.
+  ingredients merged (quantities are added up: 200 g + 300 g = 500 g) and
+  ordered by supermarket section (fruit & vegetables first, frozen near
+  the end), plus one-off extras and quick-add frequent items. The section
+  vocabulary lives in `backend/app/data/store_sections.json`.
 - **Offers & leftovers** — synced supermarket discounts and tracked
   leftovers are preferred during menu generation so nothing goes to waste.
 - **Pantry staples** — always-on-hand items (salt, oil, ...) are left off
@@ -65,6 +75,11 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
   specific kind of dish instead — type e.g. "lasagna" or "tomato soup" and
   it searches your own recipe library for a match. Once you've done the
   groceries for a week, freeze it to protect it from accidental changes.
+- **Speed**: recipes are indexed in memory (normalized text, ingredient
+  tokens, cached exclusion/offer matches), so picking and swapping doesn't
+  touch the whole database. Recipe photos are downloaded once in the
+  background and served as small WebP thumbnails from `<data dir>/thumbs`;
+  hosts that refuse server-side downloads simply keep their original image.
 
 ## Getting started (Docker)
 

@@ -7,9 +7,16 @@ from sqlalchemy.orm import Session
 from app import schemas
 from app.database import get_db
 from app.i18n import t
-from app.models import Offer, WeekMenu, WeekMenuDay
-from app.services.categorizer import TermMatcher, compile_terms, normalize_offer_terms
-from app.services.menu_generator import DAYS_PER_WEEK, generate_week_menu, refresh_day
+from app.models import Recipe, WeekMenu, WeekMenuDay
+from app.services.categorizer import TermMatcher, compile_terms
+from app.services.menu_generator import (
+    DAYS_PER_WEEK,
+    generate_week_menu,
+    pick_replacement,
+    refresh_day,
+    set_day_recipe,
+)
+from app.services.recipe_index import current_offer_matcher
 from app.services.settings import default_course_counts, get_language
 from app.services.shopping_list import build_shopping_list
 
@@ -32,12 +39,25 @@ def _resolve_week_start(week_start_date: datetime.date | None) -> datetime.date:
 
 
 def _current_offer_matcher(db: Session) -> TermMatcher:
-    return compile_terms(normalize_offer_terms([row.name for row in db.query(Offer).all()]))
+    return current_offer_matcher(db)
 
 
 def _recipe_out_with_offer(recipe, offer_matcher: TermMatcher) -> schemas.RecipeOut:
     has_offer = offer_matcher.matches(json.loads(recipe.ingredients_json or "[]"))
     return schemas.RecipeOut.from_model(recipe, has_offer=has_offer)
+
+
+def _day_out(
+    day: WeekMenuDay, offer_matcher: TermMatcher, warning: str | None = None
+) -> schemas.WeekMenuDayOut:
+    return schemas.WeekMenuDayOut(
+        day_of_week=day.day_of_week,
+        recipe=_recipe_out_with_offer(day.recipe, offer_matcher) if day.recipe else None,
+        warning=warning,
+        pinned=bool(day.pinned),
+        cooked=bool(day.cooked),
+        skip_shopping=bool(day.skip_shopping),
+    )
 
 
 def _to_week_menu_out(
@@ -46,12 +66,7 @@ def _to_week_menu_out(
     offer_matcher = offer_matcher or compile_terms([])
     days = []
     for day in sorted(week_menu.days, key=lambda d: d.day_of_week):
-        days.append(
-            schemas.WeekMenuDayOut(
-                day_of_week=day.day_of_week,
-                recipe=_recipe_out_with_offer(day.recipe, offer_matcher) if day.recipe else None,
-            )
-        )
+        days.append(_day_out(day, offer_matcher))
     return schemas.WeekMenuOut(
         week_start_date=week_menu.week_start_date,
         days=days,
@@ -181,13 +196,81 @@ def refresh_menu_day(
     _require_not_frozen(week_menu, lang)
 
     day_row, warning = refresh_day(db, week_menu, day_of_week, lang, query=query)
-    offer_matcher = _current_offer_matcher(db)
-    result = schemas.WeekMenuDayOut(
-        day_of_week=day_row.day_of_week,
-        recipe=_recipe_out_with_offer(day_row.recipe, offer_matcher) if day_row.recipe else None,
+    return _day_out(day_row, _current_offer_matcher(db), warning)
+
+
+def _load_day(
+    db: Session,
+    day_of_week: int,
+    week_start_date: datetime.date | None,
+    lang: str,
+    persist: bool = True,
+):
+    if day_of_week < 0 or day_of_week > 6:
+        raise HTTPException(400, t("invalid_day_of_week", lang))
+    week_menu, _ = _get_or_generate_week_menu(db, _resolve_week_start(week_start_date), persist=persist)
+    day_row = next(d for d in week_menu.days if d.day_of_week == day_of_week)
+    return week_menu, day_row
+
+
+@router.get("/day/{day_of_week}/candidate", response_model=schemas.WeekMenuDayOut)
+def get_day_candidate(
+    day_of_week: int,
+    week_start_date: datetime.date | None = None,
+    avoid: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """A spare replacement for one day, picked but NOT saved. The client
+    keeps one ready per day so a swap can show instantly and be persisted
+    in the background (see set_day_recipe). `avoid` = comma-separated recipe
+    ids to leave out (candidates already held for other days)."""
+    lang = get_language(db)
+    week_menu, day_row = _load_day(db, day_of_week, week_start_date, lang, persist=False)
+    avoid_ids = {int(x) for x in (avoid or "").split(",") if x.strip().isdigit()}
+    chosen, warning = pick_replacement(db, week_menu, day_of_week, lang, avoid_ids=avoid_ids)
+    recipe = db.get(Recipe, chosen.id) if chosen else None
+    return schemas.WeekMenuDayOut(
+        day_of_week=day_of_week,
+        recipe=_recipe_out_with_offer(recipe, _current_offer_matcher(db)) if recipe else None,
         warning=warning,
     )
-    return result
+
+
+@router.put("/day/{day_of_week}/recipe", response_model=schemas.WeekMenuDayOut)
+def set_menu_day_recipe(
+    day_of_week: int,
+    payload: schemas.SetDayRecipe,
+    week_start_date: datetime.date | None = None,
+    db: Session = Depends(get_db),
+):
+    lang = get_language(db)
+    week_menu, day_row = _load_day(db, day_of_week, week_start_date, lang)
+    _require_not_frozen(week_menu, lang)
+    if not db.get(Recipe, payload.recipe_id):
+        raise HTTPException(404, t("recipe_not_found", lang))
+    set_day_recipe(db, day_row, payload.recipe_id)
+    return _day_out(day_row, _current_offer_matcher(db))
+
+
+@router.patch("/day/{day_of_week}/flags", response_model=schemas.WeekMenuDayOut)
+def update_menu_day_flags(
+    day_of_week: int,
+    payload: schemas.DayFlagsUpdate,
+    week_start_date: datetime.date | None = None,
+    db: Session = Depends(get_db),
+):
+    """Pin / cooked / skip-shopping. Deliberately allowed on a frozen week:
+    ticking dishes off as they're cooked is exactly what a frozen (already
+    shopped-for) week is for, and none of these change the menu itself."""
+    lang = get_language(db)
+    _, day_row = _load_day(db, day_of_week, week_start_date, lang)
+    for field in ("pinned", "cooked", "skip_shopping"):
+        value = getattr(payload, field)
+        if value is not None:
+            setattr(day_row, field, value)
+    db.commit()
+    db.refresh(day_row)
+    return _day_out(day_row, _current_offer_matcher(db))
 
 
 @router.patch("/{week_start_date}/freeze", response_model=schemas.WeekMenuOut)

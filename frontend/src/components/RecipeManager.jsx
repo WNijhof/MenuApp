@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react";
-import { api } from "../api.js";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { api, thumbUrl } from "../api.js";
 import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabels, courseLabel } from "../courses.js";
 import { useTranslation } from "../i18n.jsx";
+
+const PAGE_SIZE = 60;
+
+// Accent- and case-insensitive, so "creme" finds "Crème brûlée".
+const normalize = (text) =>
+  (text || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 export default function RecipeManager() {
   const { t, language } = useTranslation();
@@ -12,6 +18,9 @@ export default function RecipeManager() {
   const [error, setError] = useState(null);
   const [url, setUrl] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const deferredSearch = useDeferredValue(search);
 
   const [mode, setMode] = useState("url");
   const [editingId, setEditingId] = useState(null);
@@ -115,13 +124,29 @@ export default function RecipeManager() {
   };
 
   const handleRate = async (recipe, rating) => {
+    // Update the row in place instead of reloading (and re-rendering) the
+    // whole list for a single thumbs-up.
     try {
-      await api.rateRecipe(recipe.id, recipe.rating === rating ? null : rating);
-      await load();
+      const updated = await api.rateRecipe(recipe.id, recipe.rating === rating ? null : rating);
+      setRecipes((prev) => prev.map((r) => (r.id === recipe.id ? updated : r)));
     } catch (e) {
       setError(e.message);
     }
   };
+
+  const filtered = useMemo(() => {
+    const words = normalize(deferredSearch).split(" ").filter(Boolean);
+    if (!words.length) return recipes;
+    return recipes.filter((r) => {
+      const title = normalize(r.title);
+      return words.every((w) => title.includes(w));
+    });
+  }, [recipes, deferredSearch]);
+
+  // Only the first page is rendered - the collection runs to thousands of
+  // recipes, and mounting every row (each with its own image) is what made
+  // this tab slow.
+  const shown = filtered.slice(0, visibleCount);
 
   if (loading) return <p className="status-text">{t("recipes.loading")}</p>;
 
@@ -217,6 +242,16 @@ export default function RecipeManager() {
       )}
 
       <div className="toolbar">
+        <input
+          type="search"
+          className="recipe-search-input"
+          placeholder={t("recipes.searchPlaceholder")}
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setVisibleCount(PAGE_SIZE);
+          }}
+        />
         <label>
           {t("recipes.courseFilterLabel")}{" "}
           <select value={courseFilter} onChange={handleCourseFilterChange}>
@@ -230,7 +265,10 @@ export default function RecipeManager() {
         </label>
       </div>
 
-      <p className="status-text">{t("recipes.count", { count: recipes.length })}</p>
+      <p className="status-text">{t("recipes.count", { count: filtered.length })}</p>
+      {filtered.length === 0 && recipes.length > 0 && (
+        <p className="status-text">{t("recipes.noMatches")}</p>
+      )}
 
       <table className="data-table">
         <thead>
@@ -243,9 +281,22 @@ export default function RecipeManager() {
           </tr>
         </thead>
         <tbody>
-          {recipes.map((recipe) => (
+          {shown.map((recipe) => (
             <tr key={recipe.id}>
-              <td>
+              <td className="recipe-title-cell">
+                {recipe.image_url ? (
+                  <img
+                    className="recipe-thumb"
+                    src={thumbUrl(recipe)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="48"
+                    height="48"
+                  />
+                ) : (
+                  <span className="recipe-thumb recipe-thumb-empty" />
+                )}
                 {recipe.is_manual ? (
                   <span>{recipe.title}</span>
                 ) : (
@@ -292,6 +343,13 @@ export default function RecipeManager() {
           ))}
         </tbody>
       </table>
+      {filtered.length > visibleCount && (
+        <div className="toolbar">
+          <button onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
+            {t("recipes.showMore", { count: filtered.length - visibleCount })}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

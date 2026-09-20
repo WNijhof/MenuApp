@@ -46,6 +46,23 @@ export const api = {
     const qs = params.toString();
     return request(`/menu/day/${dayOfWeek}/refresh${qs ? `?${qs}` : ""}`, { method: "POST" });
   },
+  getDayCandidate: (dayOfWeek, weekStartDate, avoidIds = []) => {
+    const params = new URLSearchParams();
+    if (weekStartDate) params.set("week_start_date", weekStartDate);
+    if (avoidIds.length) params.set("avoid", avoidIds.join(","));
+    const qs = params.toString();
+    return request(`/menu/day/${dayOfWeek}/candidate${qs ? `?${qs}` : ""}`);
+  },
+  setDayRecipe: (dayOfWeek, weekStartDate, recipeId) =>
+    request(
+      `/menu/day/${dayOfWeek}/recipe${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,
+      { method: "PUT", body: JSON.stringify({ recipe_id: recipeId }) }
+    ),
+  updateDayFlags: (dayOfWeek, weekStartDate, flags) =>
+    request(
+      `/menu/day/${dayOfWeek}/flags${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,
+      { method: "PATCH", body: JSON.stringify(flags) }
+    ),
   setWeekFrozen: (weekStartDate, frozen) =>
     request(`/menu/${weekStartDate}/freeze`, {
       method: "PATCH",
@@ -67,6 +84,11 @@ export const api = {
     if (filters.rating) params.set("rating", filters.rating);
     const qs = params.toString();
     return request(qs ? `/recipes?${qs}` : "/recipes");
+  },
+  searchRecipes: (q, course) => {
+    const params = new URLSearchParams({ q });
+    if (course) params.set("course", course);
+    return request(`/recipes/search?${params.toString()}`);
   },
   addRecipeByUrl: (url) =>
     request("/recipes/add-url", { method: "POST", body: JSON.stringify({ url }) }),
@@ -107,3 +129,7 @@ export const api = {
   updateSettings: (payload) =>
     request("/settings", { method: "PUT", body: JSON.stringify(payload) }),
 };
+
+// Small cached WebP of a recipe's photo (falls back to the original image
+// server-side until it has been generated).
+export const thumbUrl = (recipe) => `${BASE}/recipes/${recipe.id}/thumb`;

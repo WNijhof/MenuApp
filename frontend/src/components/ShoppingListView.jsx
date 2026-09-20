@@ -36,6 +36,15 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStartDate]);
 
+  // The server already returns items in supermarket order, so consecutive
+  // items of one section are grouped under a heading.
+  const sections = [];
+  for (const item of items) {
+    const last = sections[sections.length - 1];
+    if (last && last.section === item.section) last.items.push(item);
+    else sections.push({ section: item.section, items: [item] });
+  }
+
   const text = items.map((i) => i.text).join("\n");
 
   const handleCopy = async () => {
@@ -142,23 +151,30 @@ export default function ShoppingListView({ weekStartDate, onWeekChange }) {
         <p className="status-text">{t("shopping.empty")}</p>
       ) : (
         <>
-          <ul className="shopping-list-items">
-            {items.map((item, i) => (
-              <li key={item.extra_id ?? `recipe-${i}`}>
-                <span>{item.text}</span>
-                {item.extra_id != null && (
-                  <button
-                    className="danger"
-                    onClick={() => handleRemoveExtra(item.extra_id)}
-                    title={t("common.removeTitle")}
-                    aria-label={t("common.removeTitle")}
-                  >
-                    ×
-                  </button>
-                )}
-              </li>
+          <div className="shopping-sections">
+            {sections.map((group) => (
+              <section key={group.section}>
+                <h3 className="shopping-section-heading">{t(`section.${group.section}`)}</h3>
+                <ul className="shopping-list-items">
+                  {group.items.map((item, i) => (
+                    <li key={item.extra_id ?? `recipe-${group.section}-${i}`}>
+                      <span>{item.text}</span>
+                      {item.extra_id != null && (
+                        <button
+                          className="danger"
+                          onClick={() => handleRemoveExtra(item.extra_id)}
+                          title={t("common.removeTitle")}
+                          aria-label={t("common.removeTitle")}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
           <textarea className="shopping-list-textarea" readOnly rows={Math.min(items.length + 1, 25)} value={text} />
         </>
       )}

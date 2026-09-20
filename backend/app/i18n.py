@@ -144,6 +144,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "en": "All other recipes are already used this week; repetition could not be avoided.",
         "nl": "Alle andere recepten worden al deze week gebruikt; herhaling kon niet worden voorkomen.",
     },
+    "counts_trimmed_for_kept": {
+        "en": "Pinned/cooked dishes take up days, so fewer new dishes than requested were added.",
+        "nl": "Vastgezette/gemaakte gerechten nemen dagen in beslag, dus er zijn minder nieuwe gerechten toegevoegd dan gevraagd.",
+    },
     "unexpected_sync_error": {
         "en": "Unexpected error during sync: {error}",
         "nl": "Onverwachte fout tijdens synchroniseren: {error}",

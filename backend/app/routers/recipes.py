@@ -4,6 +4,7 @@ import uuid
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy import case
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,8 @@ from app.i18n import t
 from app.models import Offer, Recipe
 from app.services.categorizer import TermMatcher, compile_terms, infer_course, infer_dish_type, normalize_offer_terms
 from app.services.language_detect import detect_language
+from app.services import thumbnails
+from app.services.recipe_index import current_offer_matcher, search_titles
 from app.services.scraper import fetch_single_recipe
 from app.services.settings import get_language
 
@@ -47,11 +50,9 @@ def _apply_manual_payload(recipe: Recipe, payload: schemas.RecipeManualCreate, l
 
 
 def _current_offer_matcher(db: Session) -> TermMatcher:
-    """Compiled once per request - see categorizer.compile_terms for why
-    that matters when checking hundreds of recipes against hundreds of
-    offers (re-deriving the matcher per recipe used to dominate the
-    runtime of listing recipes)."""
-    return compile_terms(normalize_offer_terms([row.name for row in db.query(Offer).all()]))
+    """Compiled once and cached until the offers change - see
+    recipe_index.current_offer_matcher."""
+    return current_offer_matcher(db)
 
 
 def _has_offer(recipe: Recipe, offer_matcher: TermMatcher) -> bool:
@@ -72,6 +73,34 @@ def list_recipes(course: str | None = None, rating: str | None = None, db: Sessi
     recipes = query.order_by(favorite_first, Recipe.title).all()
     offer_matcher = _current_offer_matcher(db)
     return [schemas.RecipeOut.from_model(r, has_offer=_has_offer(r, offer_matcher)) for r in recipes]
+
+
+@router.get("/search", response_model=list[schemas.RecipeSuggestion])
+def search_recipes(q: str, course: str | None = None, limit: int = 8, db: Session = Depends(get_db)):
+    """Type-ahead over recipe titles (served from the in-memory index, so
+    it keeps up with typing). Disliked and ingredient-excluded recipes are
+    left out, same as anything the menu itself would pick."""
+    hits = search_titles(db, q, course=course, limit=max(1, min(limit, 20)))
+    return [
+        schemas.RecipeSuggestion(id=r.id, title=r.title, dish_type=r.dish_type, course=r.course)
+        for r in hits
+    ]
+
+
+@router.get("/{recipe_id}/thumb")
+def recipe_thumbnail(recipe_id: int, db: Session = Depends(get_db)):
+    """Small cached WebP of the recipe photo. Until it has been generated
+    (see services/thumbnails.py) fall back to the original image."""
+    path = thumbnails.thumbnail_path(recipe_id)
+    if path.is_file():
+        return FileResponse(
+            path, media_type="image/webp", headers={"Cache-Control": "public, max-age=2592000, immutable"}
+        )
+    image_url = db.query(Recipe.image_url).filter(Recipe.id == recipe_id).scalar()
+    if not image_url:
+        raise HTTPException(404, t("recipe_not_found", get_language(db)))
+    thumbnails.enqueue(recipe_id, image_url)
+    return RedirectResponse(image_url, status_code=307, headers={"Cache-Control": "no-store"})
 
 
 @router.post("/add-url", response_model=schemas.RecipeOut)
@@ -163,4 +192,5 @@ def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, t("recipe_not_found", get_language(db)))
     db.delete(recipe)
     db.commit()
+    thumbnails.thumbnail_path(recipe_id).unlink(missing_ok=True)
     return {"ok": True}

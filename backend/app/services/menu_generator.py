@@ -1,5 +1,9 @@
 """Builds the 7-day menu: random recipes, spread across dish types so the
-week isn't e.g. pasta every night, honoring the configured exclusions."""
+week isn't e.g. pasta every night, honoring the configured exclusions.
+
+All candidate selection runs against the in-memory recipe index (see
+services/recipe_index.py) rather than the Recipe table, so generating a week
+or swapping a single day doesn't load and re-parse the whole collection."""
 
 import datetime
 import json
@@ -9,23 +13,23 @@ from collections import defaultdict
 from sqlalchemy.orm import Session
 
 from app.i18n import t
-from app.models import ExclusionRule, Leftover, Offer, Recipe, WeekMenu, WeekMenuDay
-from app.services.categorizer import (
-    compile_exclusion_terms,
-    compile_terms,
-    normalize_offer_terms,
-    normalize_terms,
-    normalize_text,
+from app.models import Leftover, WeekMenu, WeekMenuDay
+from app.services.categorizer import normalize_text
+from app.services.recipe_index import (
+    IndexedRecipe,
+    available_recipes,
+    get_index,
+    preferred_recipe_ids,
 )
 
 DAYS_PER_WEEK = 7
-DEFAULT_COURSE_COUNTS = {"hoofdgerecht": DAYS_PER_WEEK}
+DEFAULT_COURSE_COUNTS = {"hoofdgerecht": 5}
 
 # How many past weeks a used recipe stays out of rotation before it's
 # eligible again - long enough that a new week doesn't just replay the
 # previous one, short enough that a modest recipe collection doesn't run
 # dry. Liked recipes are exempt from this cooldown entirely (see
-# _select_recipes_for_course / refresh_day): a thumbs-up lets a recipe
+# _select_recipes_for_course / pick_replacement): a thumbs-up lets a recipe
 # come back sooner, on equal footing with never-recently-used ones, not
 # with priority over them.
 RECENT_WEEKS_COOLDOWN = 3
@@ -56,62 +60,17 @@ def _recently_used_recipe_ids(
     return {row[0] for row in rows}
 
 
-def get_available_recipes(db: Session) -> list[Recipe]:
-    """All recipes minus disliked ones and ingredient-exclusion matches.
-    Course filtering happens separately per requested course count."""
-    exclusion_terms = [row.term for row in db.query(ExclusionRule).all()]
-    all_recipes = [r for r in db.query(Recipe).all() if r.rating != "dislike"]
-    if not exclusion_terms:
-        return all_recipes
-    # Compiled once and reused for every recipe below, rather than
-    # re-expanding the same taxonomy terms per recipe (see
-    # categorizer.compile_exclusion_terms).
-    matcher = compile_exclusion_terms(exclusion_terms)
-    return [
-        r
-        for r in all_recipes
-        if not matcher.matches(json.loads(r.ingredients_json or "[]"))
-    ]
-
-
-def _preferred_recipe_ids(db: Session, recipes: list[Recipe]) -> set[int]:
-    """Recipes that use up a tracked leftover, or an ingredient currently
-    on offer, get weighted preference during selection - liked recipes
-    deliberately do NOT: a thumbs-up only exempts a recipe from the
-    recent-use cooldown (see _recently_used_recipe_ids / recent_ids
-    below), it doesn't make it more likely to be picked than an equally
-    fresh candidate. Offer/leftover matching reuses the same literal
-    term-match either way - a discounted product name is just another
-    kind of "prefer this if you can" term, not a taxonomy category. Terms
-    are pre-normalized once outside the loop: with hundreds of offers,
-    re-normalizing them on every single recipe check would dominate the
-    runtime (measured ~5x speedup for offers)."""
-    leftover_terms = normalize_terms([row.term for row in db.query(Leftover).all()])
-    offer_terms = normalize_offer_terms([row.name for row in db.query(Offer).all()])
-    if not leftover_terms and not offer_terms:
-        return set()
-    # Compiled once and reused for every recipe below - see
-    # categorizer.compile_terms for why that matters against hundreds of
-    # offer terms and thousands of recipes.
-    leftover_matcher = compile_terms(leftover_terms)
-    offer_matcher = compile_terms(offer_terms)
-    preferred = set()
-    for r in recipes:
-        ingredients = json.loads(r.ingredients_json or "[]")
-        if leftover_terms and leftover_matcher.matches(ingredients):
-            preferred.add(r.id)
-        elif offer_terms and offer_matcher.matches(ingredients):
-            preferred.add(r.id)
-    return preferred
-
-
-def _pick_preferred(candidates: list[Recipe], preferred_ids: set[int]) -> Recipe:
+def _pick_preferred(candidates: list[IndexedRecipe], preferred_ids: set[int]) -> IndexedRecipe:
+    """Recipes that use up a tracked leftover, or an ingredient currently on
+    offer, get preference - liked recipes deliberately do NOT: a thumbs-up
+    only exempts a recipe from the recent-use cooldown, it doesn't make it
+    more likely to be picked than an equally fresh candidate."""
     preferred = [r for r in candidates if r.id in preferred_ids]
     return random.choice(preferred or candidates)
 
 
-def _group_by_dish_type(recipes: list[Recipe]) -> dict[str, list[Recipe]]:
-    groups: dict[str, list[Recipe]] = defaultdict(list)
+def _group_by_dish_type(recipes: list[IndexedRecipe]) -> dict[str, list[IndexedRecipe]]:
+    groups: dict[str, list[IndexedRecipe]] = defaultdict(list)
     for r in recipes:
         groups[r.dish_type].append(r)
     for group in groups.values():
@@ -128,14 +87,15 @@ def _build_type_sequence(dish_types: list[str], length: int) -> list[str]:
 
 
 def _select_recipes_for_course(
-    recipes: list[Recipe],
+    recipes: list[IndexedRecipe],
     count: int,
     preferred_ids: set[int],
     recent_ids: set[int],
     warnings: list[str],
     course: str,
     lang: str,
-) -> list[Recipe]:
+    already_used: set[int],
+) -> list[IndexedRecipe]:
     if count <= 0:
         return []
     if not recipes:
@@ -145,9 +105,11 @@ def _select_recipes_for_course(
     groups = _group_by_dish_type(recipes)
     dish_types = list(groups.keys())
     sequence = _build_type_sequence(dish_types, count)
-    pool_by_type = {t: list(rs) for t, rs in groups.items()}
+    pool_by_type = {dt: list(rs) for dt, rs in groups.items()}
 
-    def _eligible(pool: list[Recipe]) -> list[Recipe]:
+    used_ids: set[int] = set(already_used)
+
+    def _eligible(pool: list[IndexedRecipe]) -> list[IndexedRecipe]:
         # A recipe is eligible if it hasn't been used elsewhere this week,
         # and either falls outside the recent-use cooldown or is liked -
         # a thumbs-up exempts it from the cooldown, but doesn't otherwise
@@ -156,9 +118,8 @@ def _select_recipes_for_course(
             r for r in pool if r.id not in used_ids and (r.id not in recent_ids or r.rating == "like")
         ]
 
-    used_ids: set[int] = set()
-    chosen_list: list[Recipe] = []
-    for slot_index, dish_type in enumerate(sequence):
+    chosen_list: list[IndexedRecipe] = []
+    for dish_type in sequence:
         candidates = _eligible(pool_by_type[dish_type])
         if not candidates:
             # Ran out of eligible recipes for this type this week - borrow
@@ -184,55 +145,28 @@ def _select_recipes_for_course(
     return chosen_list
 
 
-def generate_week_selection(
-    db: Session,
-    course_counts: dict[str, int] | None = None,
-    lang: str = "en",
-    week_start_date: datetime.date | None = None,
-) -> tuple[list[Recipe | None], list[str]]:
-    """Returns (7 recipes-or-None in day order, warnings). `week_start_date`
-    anchors the recent-use cooldown - pass the week being generated so
-    only earlier weeks count against it."""
-    course_counts = course_counts or DEFAULT_COURSE_COUNTS
-    warnings: list[str] = []
-    available = get_available_recipes(db)
-
-    if not available:
-        return [None] * DAYS_PER_WEEK, [t("no_recipes_available", lang)]
-
-    preferred_ids = _preferred_recipe_ids(db, available)
-    recent_ids = _recently_used_recipe_ids(db, week_start_date) if week_start_date else set()
-
-    course_pool: dict[str, list[Recipe]] = {}
-    for course, count in course_counts.items():
-        recipes_for_course = [r for r in available if r.course == course]
-        course_pool[course] = _select_recipes_for_course(
-            recipes_for_course, count, preferred_ids, recent_ids, warnings, course, lang
-        )
-
-    # Interleave day order so e.g. the nagerecht doesn't always land on the
-    # last day: build one shuffled label sequence covering all 7 days (with
-    # None for any days left open when fewer than 7 dishes were requested),
-    # then pop the next pre-selected recipe per label. Shuffling the None
-    # labels in too spreads open days across the week instead of always
-    # trailing at the end.
-    labels: list[str | None] = [
-        course for course, recipes in course_pool.items() for _ in recipes
-    ]
-    labels += [None] * (DAYS_PER_WEEK - len(labels))
-    random.shuffle(labels)
-
-    cursors = {course: 0 for course in course_pool}
-    selection: list[Recipe | None] = []
-    for label in labels:
-        if label is None:
-            selection.append(None)
-            continue
-        idx = cursors[label]
-        selection.append(course_pool[label][idx])
-        cursors[label] += 1
-
-    return selection, warnings
+def _plan_counts(
+    course_counts: dict[str, int], kept_per_course: dict[str, int], warnings: list[str], lang: str
+) -> dict[str, int]:
+    """Effective per-course totals once kept (pinned/cooked) days are
+    accounted for: kept days count toward the requested number, and never
+    disappear even when the requested number is lower than what's kept.
+    If keeping them pushes the total past the 7 available days, the number
+    of *new* dishes is trimmed to fit."""
+    effective = {
+        course: max(course_counts.get(course, 0), kept_per_course.get(course, 0))
+        for course in set(course_counts) | set(kept_per_course)
+    }
+    trimmed = False
+    while sum(effective.values()) > DAYS_PER_WEEK:
+        trimmable = [c for c in effective if effective[c] > kept_per_course.get(c, 0)]
+        if not trimmable:
+            break
+        effective[max(trimmable, key=lambda c: effective[c] - kept_per_course.get(c, 0))] -= 1
+        trimmed = True
+    if trimmed:
+        warnings.append(t("counts_trimmed_for_kept", lang))
+    return effective
 
 
 def generate_week_menu(
@@ -242,30 +176,87 @@ def generate_week_menu(
     lang: str = "en",
     clear_leftovers: bool = True,
 ) -> WeekMenu:
-    existing = (
-        db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start_date).first()
-    )
+    """(Re)generates a week. Days that are pinned or already ticked off as
+    cooked keep their recipe and day slot; only the rest is drawn fresh."""
+    course_counts = dict(course_counts or DEFAULT_COURSE_COUNTS)
+    index = get_index(db)
+
+    existing = db.query(WeekMenu).filter(WeekMenu.week_start_date == week_start_date).first()
+    kept: dict[int, dict] = {}
     if existing:
+        for day in existing.days:
+            if day.recipe_id and (day.pinned or day.cooked) and day.recipe_id in index.by_id:
+                kept[day.day_of_week] = {
+                    "recipe_id": day.recipe_id,
+                    "pinned": day.pinned,
+                    "cooked": day.cooked,
+                    "skip_shopping": day.skip_shopping,
+                }
         db.delete(existing)
         db.flush()
 
-    selection, warnings = generate_week_selection(db, course_counts, lang, week_start_date)
+    warnings: list[str] = []
+    kept_per_course: dict[str, int] = defaultdict(int)
+    for info in kept.values():
+        kept_per_course[index.by_id[info["recipe_id"]].course] += 1
+    effective_counts = _plan_counts(course_counts, kept_per_course, warnings, lang)
+
+    available = available_recipes(db)
+    free_days = [d for d in range(DAYS_PER_WEEK) if d not in kept]
+    selection: dict[int, IndexedRecipe | None] = {d: None for d in free_days}
+
+    if not available:
+        warnings.append(t("no_recipes_available", lang))
+    else:
+        preferred_ids = preferred_recipe_ids(db)
+        recent_ids = _recently_used_recipe_ids(db, week_start_date)
+        kept_ids = {info["recipe_id"] for info in kept.values()}
+
+        course_pool: dict[str, list[IndexedRecipe]] = {}
+        for course, total in effective_counts.items():
+            needed = total - kept_per_course.get(course, 0)
+            recipes_for_course = [r for r in available if r.course == course]
+            course_pool[course] = _select_recipes_for_course(
+                recipes_for_course, needed, preferred_ids, recent_ids, warnings, course, lang, kept_ids
+            )
+
+        # Interleave day order so e.g. the nagerecht doesn't always land on
+        # the last free day: one shuffled label sequence covering every free
+        # day (None for days left open when fewer dishes were requested),
+        # then pop the next pre-selected recipe per label.
+        labels: list[str | None] = [
+            course for course, recipes in course_pool.items() for _ in recipes
+        ]
+        labels += [None] * (len(free_days) - len(labels))
+        random.shuffle(labels)
+
+        cursors = {course: 0 for course in course_pool}
+        for day_index, label in zip(free_days, labels):
+            if label is None:
+                continue
+            selection[day_index] = course_pool[label][cursors[label]]
+            cursors[label] += 1
 
     week_menu = WeekMenu(
         week_start_date=week_start_date,
-        course_counts_json=json.dumps(course_counts or DEFAULT_COURSE_COUNTS),
+        course_counts_json=json.dumps(effective_counts),
     )
     db.add(week_menu)
     db.flush()
 
-    for day_index, recipe in enumerate(selection):
-        db.add(
-            WeekMenuDay(
-                week_menu_id=week_menu.id,
-                day_of_week=day_index,
-                recipe_id=recipe.id if recipe else None,
+    for day_index in range(DAYS_PER_WEEK):
+        if day_index in kept:
+            info = kept[day_index]
+            db.add(WeekMenuDay(week_menu_id=week_menu.id, day_of_week=day_index, **info))
+        else:
+            recipe = selection[day_index]
+            db.add(
+                WeekMenuDay(
+                    week_menu_id=week_menu.id,
+                    day_of_week=day_index,
+                    recipe_id=recipe.id if recipe else None,
+                )
             )
-        )
 
     # Leftovers are assumed used once a new week has been generated around
     # them (explicit product choice, not auto-detected per recipe) - but
@@ -281,7 +272,7 @@ def generate_week_menu(
     return week_menu
 
 
-def _recipe_matches_query(recipe: Recipe, query_words: list[str]) -> bool:
+def _recipe_matches_query(recipe: IndexedRecipe, query_words: list[str]) -> bool:
     """A loose "does this recipe look like what the user typed" check
     (e.g. 'lasagne', 'gehaktbal') against title/keywords/cuisine - the same
     freeform fields a recipe's own site would use, unlike dish_type which
@@ -289,53 +280,55 @@ def _recipe_matches_query(recipe: Recipe, query_words: list[str]) -> bool:
     (as a substring, so Dutch compounds/plurals still match) - AND rather
     than OR, so a two-word query like 'kip curry' doesn't match every
     recipe that merely contains chicken."""
-    text = normalize_text(" ".join(filter(None, [recipe.title, recipe.keywords, recipe.cuisine])))
-    return all(word in text for word in query_words)
+    return all(word in recipe.search_norm for word in query_words)
 
 
-def refresh_day(
-    db: Session, week_menu: WeekMenu, day_of_week: int, lang: str = "en", query: str | None = None
-) -> tuple[WeekMenuDay, str | None]:
-    """Swap the recipe on one day for a different pick of the same course.
-    Without `query`, picks randomly, preferring a dish type that differs
-    from the neighbouring days (as before). With `query` (e.g. 'lasagne',
-    'gehaktbal'), narrows the candidate pool to recipes whose title/
-    keywords/cuisine match it - a deliberate, specific request, so unlike
-    the random path it also ignores the recent-use cooldown: a user typing
-    a dish name wants that dish, not to be told it's too soon to repeat it,
-    and the match itself is often narrow enough that the cooldown would
-    leave nothing to pick from at all."""
+def pick_replacement(
+    db: Session,
+    week_menu: WeekMenu,
+    day_of_week: int,
+    lang: str = "en",
+    query: str | None = None,
+    avoid_ids: set[int] | None = None,
+) -> tuple[IndexedRecipe | None, str | None]:
+    """Picks (without saving) a different recipe of the same course for one
+    day. Without `query`, picks randomly, preferring a dish type that
+    differs from the neighbouring days. With `query` (e.g. 'lasagne'),
+    narrows the candidates to recipes whose title/keywords/cuisine match -
+    a deliberate, specific request, so unlike the random path it also
+    ignores the recent-use cooldown. `avoid_ids` are recipes to leave out on
+    top of those already in use this week (used when pre-picking spare
+    candidates for several days at once). Returns (recipe or None, warning)."""
+    index = get_index(db)
     day_row = next(d for d in week_menu.days if d.day_of_week == day_of_week)
-    target_course = day_row.recipe.course if day_row.recipe else "hoofdgerecht"
+    current = index.by_id.get(day_row.recipe_id) if day_row.recipe_id else None
+    target_course = current.course if current else "hoofdgerecht"
 
-    available = get_available_recipes(db)
-    same_course = [r for r in available if r.course == target_course]
+    same_course = [r for r in available_recipes(db) if r.course == target_course]
 
     query_words = [w for w in normalize_text(query).split() if w] if query else []
     if query_words:
         same_course = [r for r in same_course if _recipe_matches_query(r, query_words)]
         if not same_course:
-            return day_row, t("no_recipe_matches_query", lang, query=query.strip())
+            return None, t("no_recipe_matches_query", lang, query=query.strip())
     elif not same_course:
-        warning = t("no_other_recipes_for_course", lang, course=target_course)
-        return day_row, warning
+        return None, t("no_other_recipes_for_course", lang, course=target_course)
 
-    preferred_ids = _preferred_recipe_ids(db, available)
+    preferred_ids = preferred_recipe_ids(db)
     recent_ids = set() if query_words else _recently_used_recipe_ids(db, week_menu.week_start_date)
 
     used_recipe_ids = {d.recipe_id for d in week_menu.days if d.recipe_id}
     used_recipe_ids.discard(day_row.recipe_id)
+    used_recipe_ids |= avoid_ids or set()
 
     neighbour_types = set()
     for neighbour_index in (day_of_week - 1, day_of_week + 1):
         neighbour = next((d for d in week_menu.days if d.day_of_week == neighbour_index), None)
-        if neighbour and neighbour.recipe:
-            neighbour_types.add(neighbour.recipe.dish_type)
+        if neighbour and neighbour.recipe_id and neighbour.recipe_id in index.by_id:
+            neighbour_types.add(index.by_id[neighbour.recipe_id].dish_type)
 
     # Same eligibility rule as the main generator: not used elsewhere this
-    # week, and either outside the recent-use cooldown or liked (a
-    # thumbs-up exempts it from the cooldown without otherwise boosting
-    # its odds against equally-fresh candidates).
+    # week, and either outside the recent-use cooldown or liked.
     eligible = [
         r
         for r in same_course
@@ -343,19 +336,34 @@ def refresh_day(
     ]
     best = [r for r in eligible if r.dish_type not in neighbour_types]
 
-    warning = None
     if best:
-        chosen = _pick_preferred(best, preferred_ids)
-    elif eligible:
-        chosen = _pick_preferred(eligible, preferred_ids)
-    else:
-        candidates = [r for r in same_course if r.id != day_row.recipe_id]
-        if not candidates:
-            candidates = same_course
-        chosen = _pick_preferred(candidates, preferred_ids)
-        warning = t("repetition_unavoidable", lang)
+        return _pick_preferred(best, preferred_ids), None
+    if eligible:
+        return _pick_preferred(eligible, preferred_ids), None
+    candidates = [r for r in same_course if r.id != day_row.recipe_id and r.id not in (avoid_ids or set())]
+    if not candidates:
+        candidates = [r for r in same_course if r.id != day_row.recipe_id] or same_course
+    return _pick_preferred(candidates, preferred_ids), t("repetition_unavoidable", lang)
 
-    day_row.recipe_id = chosen.id
+
+def set_day_recipe(db: Session, day_row: WeekMenuDay, recipe_id: int) -> WeekMenuDay:
+    """Puts a specific recipe on a day. The day's flags describe the old
+    dish, so they reset."""
+    day_row.recipe_id = recipe_id
+    day_row.pinned = False
+    day_row.cooked = False
+    day_row.skip_shopping = False
     db.commit()
     db.refresh(day_row)
-    return day_row, warning
+    return day_row
+
+
+def refresh_day(
+    db: Session, week_menu: WeekMenu, day_of_week: int, lang: str = "en", query: str | None = None
+) -> tuple[WeekMenuDay, str | None]:
+    """Swap the recipe on one day for a different pick of the same course."""
+    day_row = next(d for d in week_menu.days if d.day_of_week == day_of_week)
+    chosen, warning = pick_replacement(db, week_menu, day_of_week, lang, query)
+    if chosen is None:
+        return day_row, warning
+    return set_day_recipe(db, day_row, chosen.id), warning

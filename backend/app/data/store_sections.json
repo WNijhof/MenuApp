@@ -1,0 +1,171 @@
+[
+  {
+    "key": "produce",
+    "keywords": [
+      "ui", "uien", "rode ui", "bosui", "lente-ui", "lenteui", "sjalot", "sjalotten", "knoflook", "prei",
+      "wortel", "wortelen", "peen", "winterpeen", "aardappel", "aardappelen", "zoete aardappel", "krieltjes", "pastinaak",
+      "knolselderij", "bleekselderij", "selderij", "venkel", "biet", "bieten", "radijs", "rammenas", "koolrabi",
+      "tomaat", "tomaten", "cherrytomaten", "trostomaten", "komkommer", "paprika", "courgette", "aubergine",
+      "broccoli", "bloemkool", "spinazie", "sla", "ijsbergsla", "rucola", "veldsla", "andijvie", "witlof", "little gem",
+      "spruitjes", "boerenkool", "spitskool", "rodekool", "witte kool", "savooiekool", "chinese kool", "pakchoi", "paksoi",
+      "sperziebonen", "snijbonen", "doperwten", "peultjes", "suikermais", "maiskolf", "asperges", "artisjok",
+      "pompoen", "butternut", "champignons", "champignon", "paddenstoelen", "shiitake", "oesterzwammen",
+      "groene paprika", "gele paprika", "rode paprika", "citroensap", "limoensap", "chilipeper", "rode peper", "groene peper", "madame jeanette", "jalapeno", "gember", "citroen", "limoen", "sinaasappel",
+      "appel", "appels", "peer", "peren", "banaan", "bananen", "avocado", "mango", "ananas", "druiven", "aardbeien",
+      "frambozen", "blauwe bessen", "bessen", "meloen", "watermeloen", "kiwi", "pruimen", "perzik", "nectarine", "granaatappel",
+      "peterselie", "koriander", "basilicum", "munt", "bieslook", "dille", "salie", "verse tijm", "verse rozemarijn",
+      "verse oregano", "kervel", "citroengras", "taugé", "tauge", "alfalfa", "kruidenpotje", "waterkers", "spruiten",
+      "onion", "onions", "red onion", "spring onion", "scallion", "shallot", "garlic", "leek", "carrot", "carrots",
+      "potato", "potatoes", "sweet potato", "parsnip", "celery", "fennel", "beetroot", "beet", "radish",
+      "tomato", "tomatoes", "cherry tomatoes", "cucumber", "bell pepper", "zucchini", "courgettes", "eggplant",
+      "cauliflower", "spinach", "lettuce", "arugula", "rocket", "kale", "cabbage", "red cabbage", "brussels sprouts",
+      "green beans", "peas", "snow peas", "corn on the cob", "asparagus", "artichoke", "pumpkin", "squash",
+      "green pepper", "red pepper", "yellow pepper", "lemon juice", "lime juice", "mushroom", "mushrooms", "chili pepper", "red chili", "green chili", "chilli", "ginger", "lemon", "lime", "orange",
+      "apple", "pear", "banana", "bananas", "grapes", "strawberries", "raspberries", "blueberries", "berries", "melon",
+      "pineapple", "peach", "plum", "pomegranate", "parsley", "cilantro", "basil", "mint", "chives", "dill", "sage",
+      "fresh thyme", "fresh rosemary", "fresh oregano", "lemongrass", "bean sprouts", "watercress", "bok choy", "pak choi"
+    ]
+  },
+  {
+    "key": "bakery",
+    "keywords": [
+      "brood", "broodje", "broodjes", "stokbrood", "stokbroodje", "pitabroodje", "pitabroodjes", "baguette", "ciabatta",
+      "focaccia", "croissant", "bagel", "toast", "beschuit", "naan", "naanbrood", "pizzadeeg", "pizzabodem", "bladerdeeg",
+      "croutons", "bread", "bread roll", "bread rolls", "bun", "buns", "rolls", "pita", "pita bread", "sourdough",
+      "hamburgerbroodje", "hamburgerbroodjes", "hotdogbroodje", "puff pastry", "pizza dough", "pizza base"
+    ]
+  },
+  {
+    "key": "meat_fish",
+    "keywords": [
+      "kip", "kipfilet", "kippendij", "kippendijen", "kipdij", "kippenbout", "kippenpoot", "kippenvleugel", "kippenvleugels",
+      "kipgehakt", "kipreepjes", "kipshoarma", "kalkoen", "kalkoenfilet", "eend", "eendenborst", "gehakt", "rundergehakt",
+      "rundvlees", "varkensvlees", "varkensgehakt", "half om half", "gehaktbal", "gehaktballen", "hamburger", "biefstuk",
+      "ossenhaas", "entrecote", "rosbief", "runderlappen", "stoofvlees", "sucadelappen", "rundvleesreepjes", "spare ribs", "spareribs",
+      "varkenshaas", "varkenslapje", "varkenslapjes", "speklapje", "speklapjes", "spek", "spekjes", "spekblokjes", "buikspek",
+      "bacon", "ham", "achterham", "achterham", "worst", "rookworst", "braadworst", "saucijs", "chipolata", "boterhamworst",
+      "chorizo", "salami", "pancetta", "prosciutto", "parmaham", "serranoham", "lam", "lamsvlees", "lamsgehakt", "lamsrack",
+      "shoarma", "kebab", "doner", "schnitzel", "kotelet", "karbonade", "filet", "gyros", "lever", "leverworst",
+      "vis", "visfilet", "zalm", "zalmfilet", "gerookte zalm", "kabeljauw", "tonijn", "forel", "makreel", "haring", "schol",
+      "heilbot", "pangasius", "tilapia", "koolvis", "zeebaars", "garnalen", "garnaal", "scampi", "mosselen", "mossel", "kreeft",
+      "krab", "inktvis", "calamares", "oesters", "coquilles", "ansjovis",
+      "tofu", "tempeh", "seitan", "vegetarisch gehakt", "vegetarische burger", "vegetarische worst", "vegaburger", "kipstuckjes",
+      "chicken", "chicken breast", "chicken thigh", "chicken thighs", "chicken wings", "chicken drumsticks", "turkey", "duck",
+      "beef", "ground beef", "beef mince", "minced beef", "mince", "minced meat", "steak", "sirloin", "brisket", "meatballs",
+      "pork", "pork chop", "pork chops", "pork tenderloin", "pork mince", "ground pork", "pork belly", "sausage", "sausages",
+      "lamb", "ground lamb", "lamb chops", "salmon", "smoked salmon", "cod", "tuna steak", "trout", "mackerel", "herring",
+      "haddock", "sea bass", "fish", "fish fillet", "shrimp", "shrimps", "prawns", "prawn", "mussels", "crab", "squid",
+      "scallops", "lobster", "anchovies", "veggie burger", "meat substitute", "plant-based mince", "vegetarian mince"
+    ]
+  },
+  {
+    "key": "dairy",
+    "keywords": [
+      "melk", "halfvolle melk", "volle melk", "karnemelk", "havermelk", "sojamelk", "amandelmelk", "room", "slagroom",
+      "kookroom", "koksroom", "zure room", "creme fraiche", "crème fraîche", "boter", "roomboter", "margarine", "halvarine",
+      "bakboter", "yoghurt", "griekse yoghurt", "kwark", "skyr", "vla", "kaas", "geraspte kaas", "belegen kaas", "jonge kaas",
+      "oude kaas", "kaasblokjes", "roomkaas", "smeerkaas", "geitenkaas", "schapenkaas", "feta", "mozzarella", "ricotta",
+      "mascarpone", "parmezaan", "parmezaanse kaas", "pecorino", "gorgonzola", "brie", "camembert", "cheddar", "goudse",
+      "emmentaler", "gruyere", "halloumi", "hüttenkäse", "cottage cheese", "ei", "eieren", "eiwit", "eiwitten", "eidooier",
+      "eidooiers", "scharreleieren",
+      "milk", "whole milk", "skimmed milk", "buttermilk", "oat milk", "soy milk", "almond milk", "cream", "heavy cream",
+      "double cream", "single cream", "whipping cream", "sour cream", "butter", "unsalted butter", "yogurt", "greek yogurt",
+      "cheese", "grated cheese", "shredded cheese", "cream cheese", "goat cheese", "parmesan", "egg", "eggs", "egg white",
+      "egg whites", "egg yolk", "egg yolks"
+    ]
+  },
+  {
+    "key": "pasta_rice",
+    "keywords": [
+      "pasta", "spaghetti", "penne", "macaroni", "tagliatelle", "fusilli", "farfalle", "rigatoni", "linguine", "fettuccine",
+      "lasagne", "lasagnebladen", "cannelloni", "tortellini", "ravioli", "gnocchi", "orzo", "vermicelli", "noedels", "mie",
+      "rijstnoedels", "eiernoedels", "udon", "ramen", "somen", "bami", "nasi", "rijst", "basmatirijst", "jasmijnrijst",
+      "risottorijst", "zilvervliesrijst", "sushirijst", "couscous", "bulgur", "quinoa", "polenta", "gierst", "tortilla",
+      "tortilla's", "wraps", "wrap", "taco", "tacoschelpen", "taco shells", "nachos", "tortillachips",
+      "noodles", "rice", "basmati rice", "jasmine rice", "brown rice", "arborio", "risotto rice", "lasagne sheets",
+      "lasagna sheets", "spaghetti", "rice noodles", "egg noodles", "tortillas", "tortilla wraps", "taco shell"
+    ]
+  },
+  {
+    "key": "canned",
+    "keywords": [
+      "tomatenpuree", "gepelde tomaten", "tomatenblokjes", "tomaten in blik", "passata", "tomatensaus", "pastasaus", "pesto",
+      "tomatenketchup", "ketchup", "mayonaise", "mosterd", "sojasaus", "ketjap", "sambal", "sriracha", "hoisin", "oestersaus",
+      "vissaus", "worcestersaus", "tabasco", "harissa", "currypasta", "kerriepasta", "rode currypasta", "groene currypasta",
+      "tahin", "pindasaus", "satesaus", "azijn", "balsamico", "wijnazijn", "appelazijn", "bouillon", "bouillonblokje",
+      "bouillonblokjes", "kippenbouillon", "runderbouillon", "groentebouillon", "fond", "kokosmelk", "kokosroom",
+      "kikkererwten", "kidneybonen", "witte bonen", "bruine bonen", "zwarte bonen", "cannellini", "linzen", "bonen",
+      "mais", "olijven", "kappertjes", "augurken", "zilveruitjes", "zuurkool", "tonijn in blik", "soep", "soepgroente",
+      "saus", "dressing", "hummus", "salsa", "sambal oelek", "misopasta", "miso", "sojabonen", "tomatensoep",
+      "crushed tomatoes", "diced tomatoes", "canned tomatoes", "chopped tomatoes", "peeled tomatoes", "tomato paste",
+      "tomato puree", "tomato sauce", "pasta sauce", "ketchup", "mayonnaise", "mustard", "soy sauce", "fish sauce",
+      "oyster sauce", "hot sauce", "vinegar", "balsamic vinegar", "wine vinegar", "stock", "stock cube", "stock cubes",
+      "broth", "chicken stock", "beef stock", "vegetable stock", "coconut milk", "coconut cream", "chickpeas",
+      "kidney beans", "white beans", "black beans", "cannellini beans", "lentils", "beans", "sweetcorn", "corn",
+      "olives", "capers", "pickles", "gherkins", "sauerkraut", "canned tuna", "tuna in a can", "soup", "sauce", "curry paste",
+      "peanut sauce", "tahini", "harissa paste", "miso paste", "canned", "tinned"
+    ]
+  },
+  {
+    "key": "spices",
+    "keywords": [
+      "zout", "zeezout", "peper", "zwarte peper", "witte peper", "paprikapoeder", "paprikakruiden", "kerrie", "kerriepoeder",
+      "komijn", "kurkuma", "koriandervruchten", "korianderpoeder", "kaneel", "nootmuskaat", "oregano", "tijm", "rozemarijn",
+      "laurier", "laurierblad", "chilipoeder", "chilivlokken", "cayennepeper", "garam masala", "kruiden", "kruidenmix",
+      "specerijen", "tacokruiden", "italiaanse kruiden", "provencaalse kruiden", "ras el hanout", "kardemom", "kruidnagel",
+      "steranijs", "saffraan", "gemberpoeder", "knoflookpoeder", "uienpoeder", "sumak", "za'atar", "foelie", "venkelzaad",
+      "komijnzaad", "mosterdzaad", "bbq kruiden", "shoarmakruiden", "gyroskruiden", "nasikruiden", "bamikruiden",
+      "olie", "olijfolie", "zonnebloemolie", "slaolie", "sesamolie", "kokosolie", "arachideolie", "bakolie", "braadolie",
+      "salt", "sea salt", "pepper", "black pepper", "white pepper", "paprika powder", "smoked paprika", "curry powder",
+      "cumin", "turmeric", "coriander seeds", "ground coriander", "cinnamon", "nutmeg", "dried oregano", "dried thyme",
+      "thyme", "rosemary", "bay leaf", "bay leaves", "chili powder", "chili flakes", "red pepper flakes", "cayenne",
+      "spices", "seasoning", "italian seasoning", "taco seasoning", "cardamom", "cloves", "star anise", "saffron",
+      "ground ginger", "garlic powder", "onion powder", "sumac", "olive oil", "vegetable oil", "sunflower oil",
+      "sesame oil", "coconut oil", "cooking oil", "oil", "herbes de provence"
+    ]
+  },
+  {
+    "key": "baking",
+    "keywords": [
+      "bloem", "tarwebloem", "zelfrijzend bakmeel", "bakmeel", "maizena", "maiszetmeel", "zetmeel", "suiker", "kristalsuiker",
+      "poedersuiker", "basterdsuiker", "rietsuiker", "bakpoeder", "baksoda", "zuiveringszout", "gist", "droge gist",
+      "vanille", "vanillesuiker", "vanille-extract", "cacao", "cacaopoeder", "chocolade", "chocola", "chocoladeschilfers",
+      "chocoladedruppels", "honing", "stroop", "ahornsiroop", "agavesiroop", "jam", "pindakaas", "hazelnootpasta", "hagelslag",
+      "muesli", "havermout", "cornflakes", "granola", "ontbijtgranen", "koekjes", "speculaas", "biscuit", "paneermeel",
+      "broodkruim", "panko", "amandelen", "amandelschaafsel", "amandelmeel", "noten", "walnoten", "cashewnoten", "hazelnoten",
+      "pinda's", "pijnboompitten", "pistachenoten", "pecannoten", "kokos", "kokosrasp", "rozijnen", "gedroogde abrikozen",
+      "dadels", "gedroogd fruit", "zaden", "sesamzaad", "chiazaad", "lijnzaad", "zonnebloempitten", "pompoenpitten", "bakmix",
+      "gelatine", "koffie", "thee", "cacaoboter", "marsepein", "slagroomspuit", "custard", "pudding",
+      "flour", "plain flour", "all-purpose flour", "self-raising flour", "wheat flour", "cornstarch", "cornflour", "sugar",
+      "caster sugar", "brown sugar", "icing sugar", "powdered sugar", "baking powder", "baking soda", "bicarbonate of soda",
+      "yeast", "vanilla", "vanilla extract", "vanilla sugar", "cocoa", "cocoa powder", "chocolate", "chocolate chips",
+      "honey", "maple syrup", "syrup", "jam", "peanut butter", "oats", "rolled oats", "oatmeal", "cereal", "muesli",
+      "breadcrumbs", "almonds", "flaked almonds", "ground almonds", "nuts", "walnuts", "cashews", "hazelnuts", "peanuts",
+      "pine nuts", "pistachios", "pecans", "coconut", "desiccated coconut", "raisins", "dried fruit", "dates", "seeds",
+      "sesame seeds", "chia seeds", "flaxseed", "sunflower seeds", "pumpkin seeds", "gelatine", "coffee", "tea",
+      "cookies", "biscuits", "marzipan"
+    ]
+  },
+  {
+    "key": "drinks",
+    "keywords": [
+      "wijn", "rode wijn", "witte wijn", "rosewijn", "bier", "rum", "cognac", "sherry", "port", "portwijn", "likeur", "madeira",
+      "calvados", "whisky", "wodka", "gin", "prosecco", "champagne", "amaretto", "marsala", "sap", "sinaasappelsap",
+      "appelsap", "vruchtensap", "tomatensap", "cola", "frisdrank", "limonade", "tonic", "spa", "mineraalwater", "sodawater",
+      "ginger ale", "gemberbier", "siroop", "wine", "red wine", "white wine", "beer", "brandy", "liqueur", "vermouth",
+      "whiskey", "bourbon", "vodka", "orange juice", "apple juice", "juice", "soda", "sparkling water", "lemonade"
+    ]
+  },
+  {
+    "key": "frozen",
+    "keywords": [
+      "diepvries", "bevroren", "ijs", "roomijs", "vanille-ijs", "sorbet", "ijsklontjes", "frozen", "ice cream", "ice cubes",
+      "diepvriesspinazie", "diepvriesgroenten", "diepvriesfruit", "diepvriespizza", "friet", "frites", "patat", "oven friet",
+      "french fries", "fries", "hash browns", "rosti"
+    ]
+  },
+  {
+    "key": "other",
+    "keywords": []
+  }
+]
