@@ -9,8 +9,6 @@
   --danger: #b3261e;
   --warning-bg: #fff4e5;
   --warning-text: #8a5a00;
-  --offer-bg: #e6f4e6;
-  --offer-text: #206020;
   --radius: 10px;
 }
 
@@ -26,8 +24,6 @@
     --danger: #ff7a70;
     --warning-bg: #3a2f14;
     --warning-text: #f0c86a;
-    --offer-bg: #1c3a1c;
-    --offer-text: #7fd67f;
   }
 }
 
@@ -225,18 +221,6 @@ button.danger {
   color: var(--text-muted);
 }
 
-.offer-badge {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: var(--offer-bg);
-  color: var(--offer-text);
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .day-card-empty {
   padding: 1.5rem 0.8rem;
   color: var(--text-muted);
@@ -393,12 +377,6 @@ button.danger {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.offer-strike {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  font-size: 0.85em;
 }
 
 .row-actions {

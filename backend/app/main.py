@@ -12,7 +12,6 @@ from app.routers import (
     exclusions,
     leftovers,
     menu,
-    offers,
     pantry,
     recipes,
     settings,
@@ -51,6 +50,8 @@ _COLUMN_MIGRATIONS = [
 
 def _run_light_migrations():
     with engine.connect() as conn:
+        # The offers feature was removed; its scraped-discount table is dead weight.
+        conn.exec_driver_sql("DROP TABLE IF EXISTS offers")
         for table, column, ddl in _COLUMN_MIGRATIONS:
             existing_columns = {
                 row[1] for row in conn.exec_driver_sql(f"PRAGMA table_info({table})")
@@ -88,7 +89,7 @@ def _backfill_recipe_language():
 
 
 def _warm_recipe_index():
-    """Build the in-memory recipe index (and its exclusion/offer caches) in
+    """Build the in-memory recipe index (and its exclusion caches) in
     the background at startup so the first swap of the day isn't the one
     that pays for it."""
 
@@ -145,7 +146,6 @@ app.include_router(menu.router)
 app.include_router(pantry.router)
 app.include_router(leftovers.router)
 app.include_router(shopping.router)
-app.include_router(offers.router)
 app.include_router(settings.router)
 
 

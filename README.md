@@ -39,8 +39,8 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
   ordered by supermarket section (fruit & vegetables first, frozen near
   the end), plus one-off extras and quick-add frequent items. The section
   vocabulary lives in `backend/app/data/store_sections.json`.
-- **Offers & leftovers** — synced supermarket discounts and tracked
-  leftovers are preferred during menu generation so nothing goes to waste.
+- **Leftovers** — tracked leftovers are preferred during menu generation
+  so nothing goes to waste.
 - **Pantry staples** — always-on-hand items (salt, oil, ...) are left off
   the shopping list automatically.
 - **History** — browse and reuse previous weeks' menus.
@@ -76,7 +76,7 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
   it searches your own recipe library for a match. Once you've done the
   groceries for a week, freeze it to protect it from accidental changes.
 - **Speed**: recipes are indexed in memory (normalized text, ingredient
-  tokens, cached exclusion/offer matches), so picking and swapping doesn't
+  tokens, cached exclusion matches), so picking and swapping doesn't
   touch the whole database. Recipe photos are downloaded once in the
   background and served as small WebP thumbnails from `<data dir>/thumbs`;
   hosts that refuse server-side downloads simply keep their original image.

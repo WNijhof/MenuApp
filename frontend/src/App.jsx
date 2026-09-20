@@ -10,7 +10,6 @@ import PantryManager from "./components/PantryManager.jsx";
 import NietLekkerView from "./components/NietLekkerView.jsx";
 import HistoryView from "./components/HistoryView.jsx";
 import ShoppingListView from "./components/ShoppingListView.jsx";
-import OffersView from "./components/OffersView.jsx";
 import SettingsView from "./components/SettingsView.jsx";
 
 function AppShell() {
@@ -23,7 +22,6 @@ function AppShell() {
   const TABS = [
     { key: "week", label: t("tabs.week") },
     { key: "shopping-list", label: t("tabs.shoppingList") },
-    { key: "offers", label: t("tabs.offers") },
     { key: "history", label: t("tabs.history") },
     { key: "sources", label: t("tabs.sources") },
     { key: "exclusions", label: t("tabs.exclusions") },
@@ -55,7 +53,6 @@ function AppShell() {
         {tab === "shopping-list" && (
           <ShoppingListView weekStartDate={weekStartDate} onWeekChange={setWeekStartDate} />
         )}
-        {tab === "offers" && <OffersView />}
         {tab === "history" && <HistoryView />}
         {tab === "sources" && <SourceManager />}
         {tab === "exclusions" && <ExclusionManager />}

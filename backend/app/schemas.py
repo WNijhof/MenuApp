@@ -51,11 +51,10 @@ class RecipeOut(BaseModel):
     cook_time_minutes: int | None
     total_time_minutes: int | None
     servings: str | None
-    has_offer: bool = False
     is_manual: bool = False
 
     @staticmethod
-    def from_model(recipe, has_offer: bool = False):
+    def from_model(recipe):
         import json
 
         return RecipeOut(
@@ -74,7 +73,6 @@ class RecipeOut(BaseModel):
             cook_time_minutes=recipe.cook_time_minutes,
             total_time_minutes=recipe.total_time_minutes,
             servings=recipe.servings,
-            has_offer=has_offer,
             is_manual=recipe.is_manual,
         )
 
@@ -193,23 +191,6 @@ class FrequentItemOut(BaseModel):
     id: int
     term: str
     use_count: int
-
-
-class OfferOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    store: str
-    name: str
-    price: float | None
-    original_price: float | None
-    discount_label: str | None
-    valid_until: datetime.date | None
-
-
-class OfferSyncResult(BaseModel):
-    store: str
-    offers_found: int
 
 
 class AppSettingsOut(BaseModel):

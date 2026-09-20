@@ -122,9 +122,6 @@ export const api = {
   getFrequentItems: () => request("/shopping/frequent"),
   deleteFrequentItem: (id) => request(`/shopping/frequent/${id}`, { method: "DELETE" }),
 
-  getOffers: () => request("/offers"),
-  syncOffers: () => request("/offers/sync", { method: "POST" }),
-
   getSettings: () => request("/settings"),
   updateSettings: (payload) =>
     request("/settings", { method: "PUT", body: JSON.stringify(payload) }),

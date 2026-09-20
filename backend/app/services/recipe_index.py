@@ -8,7 +8,7 @@ in memory, and rebuilt only when a recipe actually changes (SQLAlchemy
 mapper events below flip the dirty flag on any insert/update/delete).
 
 Derived results that are expensive against a big collection - "which
-recipes survive the exclusions", "which use an offer or leftover" - are
+recipes survive the exclusions", "which use a leftover" - are
 cached on top, keyed on the inputs that could change them.
 """
 
@@ -19,13 +19,11 @@ from dataclasses import dataclass
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session
 
-from app.models import ExclusionRule, Leftover, Offer, Recipe
+from app.models import ExclusionRule, Leftover, Recipe
 from app.services.categorizer import (
-    TermMatcher,
     _tokenize,
     compile_exclusion_terms,
     compile_terms,
-    normalize_offer_terms,
     normalize_terms,
     normalize_text,
 )
@@ -158,30 +156,17 @@ def available_recipes(db: Session) -> list[IndexedRecipe]:
 
 
 def preferred_recipe_ids(db: Session) -> set[int]:
-    """Ids of recipes using a tracked leftover or an ingredient on offer."""
+    """Ids of recipes using a tracked leftover."""
     index = get_index(db)
     leftover_terms = tuple(sorted(normalize_terms([row.term for row in db.query(Leftover.term).all()])))
-    offer_terms = tuple(sorted(set(normalize_offer_terms([row.name for row in db.query(Offer.name).all()]))))
-    if not leftover_terms and not offer_terms:
+    if not leftover_terms:
         return set()
 
     def compute():
-        leftover_matcher = compile_terms(list(leftover_terms))
-        offer_matcher = compile_terms(list(offer_terms))
-        return {
-            r.id
-            for r in index.recipes
-            if leftover_matcher.matches_normalized(r.ingredients_text, r.tokens)
-            or offer_matcher.matches_normalized(r.ingredients_text, r.tokens)
-        }
+        matcher = compile_terms(list(leftover_terms))
+        return {r.id for r in index.recipes if matcher.matches_normalized(r.ingredients_text, r.tokens)}
 
-    return _cached(("preferred", index.version, leftover_terms, offer_terms), compute)
-
-
-def current_offer_matcher(db: Session) -> TermMatcher:
-    """Compiled offer matcher, rebuilt only when the set of offers changes."""
-    names = tuple(sorted(row.name for row in db.query(Offer.name).all()))
-    return _cached(("offers", names), lambda: compile_terms(normalize_offer_terms(list(names))))
+    return _cached(("preferred", index.version, leftover_terms), compute)
 
 
 def search_titles(

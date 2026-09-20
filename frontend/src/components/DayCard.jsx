@@ -165,11 +165,6 @@ export default function DayCard({
               <div className="day-card-info">
                 <span className="dish-type-badge">{dishTypeLabel(recipe.dish_type, language)}</span>
                 <span className="dish-type-badge">{courseLabel(recipe.course, language)}</span>
-                {recipe.has_offer && (
-                  <span className="offer-badge" title={t("offer.badgeTitle")}>
-                    {t("offer.badgeText")}
-                  </span>
-                )}
                 <h3>{recipe.title}</h3>
                 {recipe.total_time_minutes ? (
                   <span className="time-badge">{recipe.total_time_minutes} min</span>

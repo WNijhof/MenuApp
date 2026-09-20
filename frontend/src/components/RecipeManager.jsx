@@ -305,11 +305,6 @@ export default function RecipeManager() {
                   </a>
                 )}
                 {recipe.is_manual && <span className="manual-badge">{t("recipes.manualBadge")}</span>}
-                {recipe.has_offer && (
-                  <span className="offer-badge" title={t("offer.badgeTitle")}>
-                    {t("offer.badgeText")}
-                  </span>
-                )}
               </td>
               <td>{dishTypeLabel(recipe.dish_type, language)}</td>
               <td>{courseLabel(recipe.course, language)}</td>

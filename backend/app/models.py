@@ -141,29 +141,6 @@ class FrequentItem(Base):
     )
 
 
-class Offer(Base):
-    """A currently-running discount at a supermarket chain, refreshed via
-    a full replace-per-store sync (offers.py router) rather than
-    incremental updates - last week's offers are gone, not "expired"."""
-
-    __tablename__ = "offers"
-    __table_args__ = (
-        UniqueConstraint("store", "external_id", name="uq_offer_store_external_id"),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    store: Mapped[str] = mapped_column(String(20))
-    external_id: Mapped[str] = mapped_column(String(100))
-    name: Mapped[str] = mapped_column(String(300))
-    price: Mapped[float | None] = mapped_column(Float, nullable=True)
-    original_price: Mapped[float | None] = mapped_column(Float, nullable=True)
-    discount_label: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    valid_until: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
-    scraped_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=datetime.datetime.utcnow
-    )
-
-
 class TranslationCache(Base):
     """Caches ingredient-line translations (see services/translator.py) so
     the same line is only ever sent to the translation API once, keyed on

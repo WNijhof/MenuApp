@@ -156,43 +156,10 @@ def expand_exclusion_term(term: str) -> list[str]:
 
 def normalize_terms(terms: list[str]) -> list[str]:
     """Pre-normalize a term list once when it's about to be checked against
-    many recipes in a loop (e.g. "does any recipe use a current offer?")
+    many recipes in a loop (e.g. "does any recipe use a leftover?")
     - re-normalizing the same term list on every single call is the
     dominant cost when scanning thousands of recipes."""
     return [normalize_text(t) for t in terms if t]
-
-
-# Words that show up in supermarket offer names but never in a recipe's own
-# ingredient line: pack sizes/units, store/brand names, generic filler.
-# Stripping these out of a name like "AH Kipfilet 500 g" leaves "kipfilet" -
-# a word that can actually turn up in an ingredient list, unlike the name as
-# a whole ever would.
-_OFFER_NOISE_WORDS = {
-    "kg", "g", "gr", "gram", "ml", "cl", "l", "liter",
-    "stuks", "stuk", "st", "pak", "pack", "zak", "doos", "fles", "blik",
-    "bakje", "krat", "x", "per", "voordeelverpakking", "verpakking",
-    "ah", "aldi", "jumbo", "lidl", "coop", "plus", "ekoplaza", "huismerk",
-    "de", "het", "een", "en", "van", "met", "voor",
-}
-_NUMBER_RE = re.compile(r"^\d+([.,]\d+)?$")
-
-
-def normalize_offer_terms(offer_names: list[str]) -> list[str]:
-    """Offer names are typically multi-word with a pack size/unit and often
-    a brand ('Aardappelen 2 kg', 'AH Kipfilet 500 g') - matched as a whole
-    phrase (like a normal multi-word term) they'd essentially never appear
-    verbatim in a recipe's ingredient text, so the offer/preference signal
-    would almost never fire. Flattening each name into its significant
-    single words instead lets the normal single-word (compound/plural
-    aware) matching in `_term_matches` do the work, at the cost of being a
-    looser match than a literal phrase."""
-    words: list[str] = []
-    for name in offer_names:
-        for word in _tokenize(normalize_text(name)):
-            if word in _OFFER_NOISE_WORDS or _NUMBER_RE.match(word) or len(word) <= 2:
-                continue
-            words.append(word)
-    return words
 
 
 class TermMatcher(NamedTuple):
@@ -230,11 +197,11 @@ class TermMatcher(NamedTuple):
 def compile_terms(terms: list[str]) -> TermMatcher:
     """Classifies (and dedupes) a normalized term list once. Callers
     matching many recipes against the same term list (see
-    _preferred_recipe_ids, get_available_recipes, _has_offer) should call
+    preferred_recipe_ids, available_recipes) should call
     this once and reuse the result via TermMatcher.matches, rather than
     re-deriving the same classification (and re-scanning every ingredient
     token) on every single recipe - that's the dominant cost when checking
-    e.g. hundreds of offer terms against thousands of recipes."""
+    e.g. many terms against thousands of recipes."""
     exact: list[str] = []
     phrase: list[str] = []
     substring: list[str] = []

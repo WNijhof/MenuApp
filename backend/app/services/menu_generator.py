@@ -61,8 +61,7 @@ def _recently_used_recipe_ids(
 
 
 def _pick_preferred(candidates: list[IndexedRecipe], preferred_ids: set[int]) -> IndexedRecipe:
-    """Recipes that use up a tracked leftover, or an ingredient currently on
-    offer, get preference - liked recipes deliberately do NOT: a thumbs-up
+    """Recipes that use up a tracked leftover get preference - liked recipes deliberately do NOT: a thumbs-up
     only exempts a recipe from the recent-use cooldown, it doesn't make it
     more likely to be picked than an equally fresh candidate."""
     preferred = [r for r in candidates if r.id in preferred_ids]

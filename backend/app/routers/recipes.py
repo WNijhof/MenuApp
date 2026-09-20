@@ -11,11 +11,11 @@ from sqlalchemy.orm import Session
 from app import schemas
 from app.database import get_db
 from app.i18n import t
-from app.models import Offer, Recipe
-from app.services.categorizer import TermMatcher, compile_terms, infer_course, infer_dish_type, normalize_offer_terms
+from app.models import Recipe
+from app.services.categorizer import infer_course, infer_dish_type
 from app.services.language_detect import detect_language
 from app.services import thumbnails
-from app.services.recipe_index import current_offer_matcher, search_titles
+from app.services.recipe_index import search_titles
 from app.services.scraper import fetch_single_recipe
 from app.services.settings import get_language
 
@@ -49,16 +49,6 @@ def _apply_manual_payload(recipe: Recipe, payload: schemas.RecipeManualCreate, l
     recipe.language = detect_language(" ".join([title, *ingredients, *instructions]))
 
 
-def _current_offer_matcher(db: Session) -> TermMatcher:
-    """Compiled once and cached until the offers change - see
-    recipe_index.current_offer_matcher."""
-    return current_offer_matcher(db)
-
-
-def _has_offer(recipe: Recipe, offer_matcher: TermMatcher) -> bool:
-    return offer_matcher.matches(json.loads(recipe.ingredients_json or "[]"))
-
-
 @router.get("", response_model=list[schemas.RecipeOut])
 def list_recipes(course: str | None = None, rating: str | None = None, db: Session = Depends(get_db)):
     query = db.query(Recipe)
@@ -71,8 +61,7 @@ def list_recipes(course: str | None = None, rating: str | None = None, db: Sessi
     # logic, so use an explicit CASE for an unambiguous 0/1 sort key.
     favorite_first = case((Recipe.rating == "like", 0), else_=1)
     recipes = query.order_by(favorite_first, Recipe.title).all()
-    offer_matcher = _current_offer_matcher(db)
-    return [schemas.RecipeOut.from_model(r, has_offer=_has_offer(r, offer_matcher)) for r in recipes]
+    return [schemas.RecipeOut.from_model(r) for r in recipes]
 
 
 @router.get("/search", response_model=list[schemas.RecipeSuggestion])
@@ -107,7 +96,7 @@ def recipe_thumbnail(recipe_id: int, db: Session = Depends(get_db)):
 def add_recipe_by_url(payload: schemas.AddRecipeUrl, db: Session = Depends(get_db)):
     existing = db.query(Recipe).filter(Recipe.url == payload.url).first()
     if existing:
-        return schemas.RecipeOut.from_model(existing, has_offer=_has_offer(existing, _current_offer_matcher(db)))
+        return schemas.RecipeOut.from_model(existing)
 
     lang = get_language(db)
     try:
@@ -138,7 +127,7 @@ def add_recipe_by_url(payload: schemas.AddRecipeUrl, db: Session = Depends(get_d
     db.add(recipe)
     db.commit()
     db.refresh(recipe)
-    return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_matcher(db)))
+    return schemas.RecipeOut.from_model(recipe)
 
 
 @router.post("/manual", response_model=schemas.RecipeOut)
@@ -152,7 +141,7 @@ def add_manual_recipe(payload: schemas.RecipeManualCreate, db: Session = Depends
     db.add(recipe)
     db.commit()
     db.refresh(recipe)
-    return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_matcher(db)))
+    return schemas.RecipeOut.from_model(recipe)
 
 
 @router.patch("/{recipe_id}/manual", response_model=schemas.RecipeOut)
@@ -167,7 +156,7 @@ def update_manual_recipe(recipe_id: int, payload: schemas.RecipeManualCreate, db
     _apply_manual_payload(recipe, payload, lang)
     db.commit()
     db.refresh(recipe)
-    return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_matcher(db)))
+    return schemas.RecipeOut.from_model(recipe)
 
 
 @router.patch("/{recipe_id}/rating", response_model=schemas.RecipeOut)
@@ -182,7 +171,7 @@ def rate_recipe(recipe_id: int, payload: schemas.RatingUpdate, db: Session = Dep
     recipe.rated_at = datetime.datetime.utcnow() if payload.rating else None
     db.commit()
     db.refresh(recipe)
-    return schemas.RecipeOut.from_model(recipe, has_offer=_has_offer(recipe, _current_offer_matcher(db)))
+    return schemas.RecipeOut.from_model(recipe)
 
 
 @router.delete("/{recipe_id}")

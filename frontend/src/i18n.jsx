@@ -9,7 +9,6 @@ const translations = {
 
     "tabs.week": "Weekly menu",
     "tabs.shoppingList": "Shopping list",
-    "tabs.offers": "Offers",
     "tabs.history": "History",
     "tabs.sources": "Sources",
     "tabs.exclusions": "Exclusions",
@@ -90,8 +89,6 @@ const translations = {
     "section.frozen": "Frozen",
     "section.other": "Other",
 
-    "offer.badgeTitle": "Contains a product that's currently on offer",
-    "offer.badgeText": "🏷️ offer",
 
     "history.help": "Previous weekly menus, for reuse inspiration.",
     "history.loading": "Loading history…",
@@ -109,17 +106,6 @@ const translations = {
     "disliked.restore": "Restore",
     "disliked.empty": "No recipes marked \"not tasty\" yet.",
 
-    "offers.loading": "Loading offers…",
-    "offers.help": "Current offers at Aldi, Jumbo and Lidl. Recipes using one of these products get priority when generating the weekly menu.",
-    "offers.sync": "Refresh offers",
-    "offers.storeLabel": "Store:",
-    "offers.allStores": "All stores",
-    "offers.count": "{count} offers",
-    "offers.colProduct": "Product",
-    "offers.colStore": "Store",
-    "offers.colPrice": "Price",
-    "offers.colDiscount": "Discount",
-    "offers.empty": "No offers fetched yet — click \"Refresh offers\".",
 
     "pantry.loading": "Loading pantry staples…",
     "pantry.helpPrefix": "Products you always have on hand (e.g.",
@@ -214,7 +200,6 @@ const translations = {
 
     "tabs.week": "Weekmenu",
     "tabs.shoppingList": "Boodschappenlijst",
-    "tabs.offers": "Aanbiedingen",
     "tabs.history": "Geschiedenis",
     "tabs.sources": "Bronnen",
     "tabs.exclusions": "Uitsluitingen",
@@ -295,8 +280,6 @@ const translations = {
     "section.frozen": "Diepvries",
     "section.other": "Overig",
 
-    "offer.badgeTitle": "Bevat een product dat nu in de aanbieding is",
-    "offer.badgeText": "🏷️ aanbieding",
 
     "history.help": "Eerdere weekmenu's, ter inspiratie voor hergebruik.",
     "history.loading": "Geschiedenis wordt geladen…",
@@ -314,17 +297,6 @@ const translations = {
     "disliked.restore": "Terugzetten",
     "disliked.empty": "Nog geen recepten als \"niet lekker\" gemarkeerd.",
 
-    "offers.loading": "Aanbiedingen worden geladen…",
-    "offers.help": "Huidige aanbiedingen bij Aldi, Jumbo en Lidl. Recepten die een van deze producten gebruiken krijgen voorrang bij het genereren van het weekmenu.",
-    "offers.sync": "Ververs aanbiedingen",
-    "offers.storeLabel": "Winkel:",
-    "offers.allStores": "Alle winkels",
-    "offers.count": "{count} aanbiedingen",
-    "offers.colProduct": "Product",
-    "offers.colStore": "Winkel",
-    "offers.colPrice": "Prijs",
-    "offers.colDiscount": "Korting",
-    "offers.empty": "Nog geen aanbiedingen opgehaald — klik op \"Ververs aanbiedingen\".",
 
     "pantry.loading": "Basisproducten worden geladen…",
     "pantry.helpPrefix": "Producten die je altijd in huis hebt (bv.",
