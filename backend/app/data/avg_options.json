@@ -70,6 +70,8 @@
     {"id": "cordon_bleu", "emoji": "🧀", "label": {"nl": "Cordon bleu", "en": "Cordon bleu"}, "shop": {"nl": "cordon bleu", "en": "cordon bleu"}, "per_person": 1, "unit": ""},
     {"id": "slavink", "emoji": "🥓", "label": {"nl": "Slavink", "en": "Pork sausage roll"}, "shop": {"nl": "slavink", "en": "pork sausage roll"}, "per_person": 1, "unit": ""},
     {"id": "hot_dog", "emoji": "🌭", "label": {"nl": "Knakworstjes", "en": "Hot dog sausages"}, "shop": {"nl": "knakworst", "en": "hot dog sausages"}, "per_person": 2, "unit": ""},
+    {"id": "fresh_sausage", "emoji": "🌭", "label": {"nl": "Verse worst", "en": "Fresh sausage"}, "shop": {"nl": "verse worst", "en": "fresh sausage"}, "per_person": 1, "unit": ""},
+    {"id": "boomstammetjes", "emoji": "🪵", "label": {"nl": "Boomstammetjes", "en": "Minced meat logs"}, "shop": {"nl": "boomstammetjes", "en": "minced meat logs"}, "per_person": 2, "unit": ""},
     {"id": "nuggets", "emoji": "🍗", "label": {"nl": "Kipnuggets", "en": "Chicken nuggets"}, "shop": {"nl": "kipnuggets", "en": "chicken nuggets"}, "per_person": 5, "unit": ""}
   ]
 }
