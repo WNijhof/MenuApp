@@ -26,6 +26,7 @@ import json
 from sqlalchemy.orm import Session
 
 from app.models import PantryStaple, ShoppingListExtra, WeekMenu
+from app.services import avg as avg_service
 from app.services.categorizer import compile_terms, normalize_terms
 from app.services.ingredients import (
     classify_section,
@@ -53,8 +54,14 @@ def build_shopping_list(db: Session, week_menu: WeekMenu) -> list[dict]:
     # translator.translate_lines) instead of one API call per line.
     ordered_lines: list[tuple[str, str]] = []  # (line, recipe_lang)
     lines_by_recipe_lang: dict[str, list[str]] = {}
+    avg_lines: list[str] = []  # already in the UI language, nothing to translate
     for day in week_menu.days:
-        if not day.recipe or day.skip_shopping:
+        if day.skip_shopping:
+            continue
+        choice = avg_service.parse(day.avg_json) if not day.recipe else None
+        if choice:
+            avg_lines.extend(avg_service.shopping_lines(choice, ui_lang))
+        if not day.recipe:
             continue
         recipe_lang = day.recipe.language or "nl"
         for line in json.loads(day.recipe.ingredients_json or "[]"):
@@ -75,6 +82,7 @@ def build_shopping_list(db: Session, week_menu: WeekMenu) -> list[dict]:
         if pantry_matcher.matches([display]):
             continue
         display_lines.append(display)
+    display_lines.extend(line for line in avg_lines if not pantry_matcher.matches([line]))
 
     order = {key: i for i, key in enumerate(section_order())}
     items: list[dict] = []

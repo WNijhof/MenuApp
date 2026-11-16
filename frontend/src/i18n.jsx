@@ -194,6 +194,18 @@ const translations = {
     "settings.languageLabel": "Language:",
     "settings.languageEnglish": "English",
     "settings.languageDutch": "Nederlands",
+
+    "avg.badge": "AVG",
+    "avg.starch": "Potato",
+    "avg.veg": "Vegetable",
+    "avg.meat": "Meat",
+    "avg.portions": "Portions",
+    "avg.fewer": "Fewer portions",
+    "avg.more": "More portions",
+    "avg.make": "Make this a simple meal: potato, vegetable, meat",
+    "avg.backToRecipe": "Back to a recipe",
+    "avg.shuffle": "Pick a different combination",
+    "avg.help": "🥔 turns a day into a simple potato-vegetable-meat meal: swipe (or use ‹ ›) to choose each part. What you pick goes on the shopping list.",
   },
   nl: {
     "app.title": "Weekmenu",
@@ -385,6 +397,18 @@ const translations = {
     "settings.languageLabel": "Taal:",
     "settings.languageEnglish": "English",
     "settings.languageDutch": "Nederlands",
+
+    "avg.badge": "AVG",
+    "avg.starch": "Aardappel",
+    "avg.veg": "Groente",
+    "avg.meat": "Vlees",
+    "avg.portions": "Porties",
+    "avg.fewer": "Minder porties",
+    "avg.more": "Meer porties",
+    "avg.make": "Maak hier een simpele maaltijd van: aardappel, groente, vlees",
+    "avg.backToRecipe": "Terug naar een recept",
+    "avg.shuffle": "Kies een andere combinatie",
+    "avg.help": "🥔 maakt van een dag een simpele aardappel-groente-vlees-maaltijd: veeg (of gebruik ‹ ›) om elk onderdeel te kiezen. Wat je kiest komt op de boodschappenlijst.",
   },
 };
 

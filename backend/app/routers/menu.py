@@ -8,11 +8,13 @@ from app import schemas
 from app.database import get_db
 from app.i18n import t
 from app.models import Recipe, WeekMenu, WeekMenuDay
+from app.services import avg as avg_service
 from app.services.menu_generator import (
     DAYS_PER_WEEK,
     generate_week_menu,
     pick_replacement,
     refresh_day,
+    set_day_avg,
     set_day_recipe,
 )
 from app.services.settings import default_course_counts, get_language
@@ -40,6 +42,7 @@ def _day_out(day: WeekMenuDay, warning: str | None = None) -> schemas.WeekMenuDa
     return schemas.WeekMenuDayOut(
         day_of_week=day.day_of_week,
         recipe=schemas.RecipeOut.from_model(day.recipe) if day.recipe else None,
+        avg=avg_service.parse(day.avg_json),
         warning=warning,
         pinned=bool(day.pinned),
         cooked=bool(day.cooked),
@@ -234,6 +237,25 @@ def set_menu_day_recipe(
     if not db.get(Recipe, payload.recipe_id):
         raise HTTPException(404, t("recipe_not_found", lang))
     set_day_recipe(db, day_row, payload.recipe_id)
+    return _day_out(day_row)
+
+
+@router.put("/day/{day_of_week}/avg", response_model=schemas.WeekMenuDayOut)
+def set_menu_day_avg(
+    day_of_week: int,
+    payload: schemas.AvgMeal,
+    week_start_date: datetime.date | None = None,
+    db: Session = Depends(get_db),
+):
+    """Makes the day a simple AVG meal (or changes its potato / vegetable /
+    meat / portions). Turning a recipe day into an AVG day drops the recipe."""
+    lang = get_language(db)
+    week_menu, day_row = _load_day(db, day_of_week, week_start_date, lang)
+    _require_not_frozen(week_menu, lang)
+    choice = payload.model_dump()
+    if not avg_service.is_valid(choice):
+        raise HTTPException(400, t("invalid_avg_choice", lang))
+    set_day_avg(db, day_row, choice)
     return _day_out(day_row)
 
 

@@ -220,6 +220,10 @@ class WeekMenuDay(Base):
     pinned: Mapped[bool] = mapped_column(Boolean, default=False)
     cooked: Mapped[bool] = mapped_column(Boolean, default=False)
     skip_shopping: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Set instead of recipe_id when the day is a simple AVG meal (potato +
+    # vegetable + meat, see services/avg.py): JSON of the three chosen
+    # option ids plus the number of portions. Mutually exclusive with recipe_id.
+    avg_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     week_menu: Mapped["WeekMenu"] = relationship(back_populates="days")
     recipe: Mapped["Recipe | None"] = relationship()

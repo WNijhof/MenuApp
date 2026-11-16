@@ -1,0 +1,49 @@
+{
+  "_comment": "Options for the simple AVG meal (Aardappel, Groente, Vlees). Each option: id (stable, stored in the week menu), emoji, label (what the user sees, per UI language), shop (the name used on the shopping list, per UI language; several options may share one so they merge, e.g. boiled/fried/mashed potatoes all buy 'aardappelen'), per_person (quantity bought per portion) and unit ('g' for weight, '' for a count of pieces - counts are rounded up). Edit this file to add or remove choices.",
+  "starch": [
+    {"id": "boiled", "emoji": "🥔", "label": {"nl": "Gekookte aardappelen", "en": "Boiled potatoes"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "fried", "emoji": "🍳", "label": {"nl": "Gebakken aardappelen", "en": "Fried potatoes"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "wedges", "emoji": "🥔", "label": {"nl": "Aardappelschijfjes uit de oven", "en": "Oven potato slices"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "potato_wedges", "emoji": "🥔", "label": {"nl": "Aardappelwedges", "en": "Potato wedges"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "cubes", "emoji": "🧂", "label": {"nl": "Gebakken aardappelblokjes", "en": "Pan-fried potato cubes"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "herbs", "emoji": "🌿", "label": {"nl": "Kruidenaardappelen uit de oven", "en": "Herb roasted potatoes"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "hasselback", "emoji": "🥔", "label": {"nl": "Hasselback aardappel", "en": "Hasselback potatoes"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "baked", "emoji": "🔥", "label": {"nl": "Gepofte aardappel", "en": "Baked potato"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 300, "unit": "g"},
+    {"id": "gratin", "emoji": "🧀", "label": {"nl": "Aardappelgratin", "en": "Potato gratin"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "rosti", "emoji": "🥞", "label": {"nl": "Rösti", "en": "Rösti"}, "shop": {"nl": "diepvries rosti", "en": "frozen rosti"}, "per_person": 150, "unit": "g"},
+    {"id": "duchesse", "emoji": "🥔", "label": {"nl": "Pommes duchesse", "en": "Duchess potatoes"}, "shop": {"nl": "diepvries pommes duchesse", "en": "frozen duchess potatoes"}, "per_person": 200, "unit": "g"},
+    {"id": "croquettes", "emoji": "🟤", "label": {"nl": "Kroketten", "en": "Croquettes"}, "shop": {"nl": "diepvries kroketten", "en": "frozen croquettes"}, "per_person": 3, "unit": ""},
+    {"id": "hash_browns", "emoji": "🟨", "label": {"nl": "Hash browns", "en": "Hash browns"}, "shop": {"nl": "diepvries hash browns", "en": "frozen hash browns"}, "per_person": 150, "unit": "g"},
+    {"id": "mashed", "emoji": "🥣", "label": {"nl": "Aardappelpuree", "en": "Mashed potatoes"}, "shop": {"nl": "aardappelen", "en": "potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "baby", "emoji": "🥔", "label": {"nl": "Krieltjes uit de oven", "en": "Roasted baby potatoes"}, "shop": {"nl": "krieltjes", "en": "baby potatoes"}, "per_person": 250, "unit": "g"},
+    {"id": "sweet", "emoji": "🍠", "label": {"nl": "Zoete aardappel uit de oven", "en": "Roasted sweet potato"}, "shop": {"nl": "zoete aardappel", "en": "sweet potato"}, "per_person": 250, "unit": "g"},
+    {"id": "fries", "emoji": "🍟", "label": {"nl": "Friet uit de oven", "en": "Oven fries"}, "shop": {"nl": "diepvries friet", "en": "frozen fries"}, "per_person": 200, "unit": "g"}
+  ],
+  "veg": [
+    {"id": "broccoli", "emoji": "🥦", "label": {"nl": "Broccoli", "en": "Broccoli"}, "shop": {"nl": "broccoli", "en": "broccoli"}, "per_person": 200, "unit": "g"},
+    {"id": "cauliflower", "emoji": "🥬", "label": {"nl": "Bloemkool", "en": "Cauliflower"}, "shop": {"nl": "bloemkool", "en": "cauliflower"}, "per_person": 200, "unit": "g"},
+    {"id": "green_beans", "emoji": "🫛", "label": {"nl": "Sperziebonen", "en": "Green beans"}, "shop": {"nl": "sperziebonen", "en": "green beans"}, "per_person": 200, "unit": "g"},
+    {"id": "carrots", "emoji": "🥕", "label": {"nl": "Worteltjes", "en": "Carrots"}, "shop": {"nl": "wortelen", "en": "carrots"}, "per_person": 200, "unit": "g"},
+    {"id": "spinach", "emoji": "🌿", "label": {"nl": "Spinazie", "en": "Spinach"}, "shop": {"nl": "spinazie", "en": "spinach"}, "per_person": 150, "unit": "g"},
+    {"id": "peas", "emoji": "🫛", "label": {"nl": "Doperwten", "en": "Peas"}, "shop": {"nl": "doperwten", "en": "peas"}, "per_person": 150, "unit": "g"},
+    {"id": "sprouts", "emoji": "🥬", "label": {"nl": "Spruitjes", "en": "Brussels sprouts"}, "shop": {"nl": "spruitjes", "en": "brussels sprouts"}, "per_person": 200, "unit": "g"},
+    {"id": "red_cabbage", "emoji": "🥬", "label": {"nl": "Rodekool", "en": "Red cabbage"}, "shop": {"nl": "rodekool", "en": "red cabbage"}, "per_person": 200, "unit": "g"},
+    {"id": "endive", "emoji": "🥗", "label": {"nl": "Andijvie", "en": "Endive"}, "shop": {"nl": "andijvie", "en": "endive"}, "per_person": 200, "unit": "g"},
+    {"id": "pointed_cabbage", "emoji": "🥬", "label": {"nl": "Spitskool", "en": "Pointed cabbage"}, "shop": {"nl": "spitskool", "en": "pointed cabbage"}, "per_person": 200, "unit": "g"},
+    {"id": "courgette", "emoji": "🥒", "label": {"nl": "Courgette", "en": "Zucchini"}, "shop": {"nl": "courgette", "en": "zucchini"}, "per_person": 200, "unit": "g"},
+    {"id": "chicory", "emoji": "🥗", "label": {"nl": "Witlof", "en": "Chicory"}, "shop": {"nl": "witlof", "en": "chicory"}, "per_person": 200, "unit": "g"},
+    {"id": "kale", "emoji": "🥬", "label": {"nl": "Boerenkool", "en": "Kale"}, "shop": {"nl": "boerenkool", "en": "kale"}, "per_person": 200, "unit": "g"}
+  ],
+  "meat": [
+    {"id": "chicken_breast", "emoji": "🍗", "label": {"nl": "Kipfilet", "en": "Chicken breast"}, "shop": {"nl": "kipfilet", "en": "chicken breast"}, "per_person": 1, "unit": ""},
+    {"id": "chicken_thigh", "emoji": "🍗", "label": {"nl": "Kippendij", "en": "Chicken thigh"}, "shop": {"nl": "kippendij", "en": "chicken thigh"}, "per_person": 2, "unit": ""},
+    {"id": "drumstick", "emoji": "🍗", "label": {"nl": "Kippenbout", "en": "Chicken drumstick"}, "shop": {"nl": "kippenbout", "en": "chicken drumsticks"}, "per_person": 1, "unit": ""},
+    {"id": "burger", "emoji": "🍔", "label": {"nl": "Hamburger", "en": "Burger"}, "shop": {"nl": "hamburger", "en": "beef burger"}, "per_person": 1, "unit": ""},
+    {"id": "meatball", "emoji": "🧆", "label": {"nl": "Gehaktballen", "en": "Meatballs"}, "shop": {"nl": "gehaktbal", "en": "meatballs"}, "per_person": 2, "unit": ""},
+    {"id": "sausage", "emoji": "🌭", "label": {"nl": "Braadworst", "en": "Fried sausage"}, "shop": {"nl": "braadworst", "en": "sausage"}, "per_person": 1, "unit": ""},
+    {"id": "smoked_sausage", "emoji": "🌭", "label": {"nl": "Rookworst", "en": "Smoked sausage"}, "shop": {"nl": "rookworst", "en": "smoked sausage"}, "per_person": 0.5, "unit": ""},
+    {"id": "schnitzel", "emoji": "🥩", "label": {"nl": "Schnitzel", "en": "Schnitzel"}, "shop": {"nl": "schnitzel", "en": "schnitzel"}, "per_person": 1, "unit": ""},
+    {"id": "pork_chop", "emoji": "🥩", "label": {"nl": "Karbonade", "en": "Pork chop"}, "shop": {"nl": "karbonade", "en": "pork chop"}, "per_person": 1, "unit": ""},
+    {"id": "bacon_strip", "emoji": "🥓", "label": {"nl": "Speklappen", "en": "Pork belly slices"}, "shop": {"nl": "speklap", "en": "pork belly slices"}, "per_person": 2, "unit": ""}
+  ]
+}

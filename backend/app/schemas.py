@@ -127,9 +127,19 @@ class LeftoverOut(BaseModel):
     term: str
 
 
+class AvgMeal(BaseModel):
+    """A simple Aardappel/Groente/Vlees meal: ids from data/avg_options.json."""
+
+    starch: str
+    veg: str
+    meat: str
+    portions: int = 2
+
+
 class WeekMenuDayOut(BaseModel):
     day_of_week: int
     recipe: RecipeOut | None
+    avg: AvgMeal | None = None
     warning: str | None = None
     pinned: bool = False
     cooked: bool = False

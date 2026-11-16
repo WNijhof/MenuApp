@@ -25,6 +25,11 @@ ingredients you want to exclude (e.g. "fish" also excludes cod, salmon, ...).
   week or changing the number of dishes; tick a dish off as cooked (it
   greys out and also stays put); or keep a dish's ingredients off the
   shopping list (eating out, already have everything).
+- **AVG meals** — 🥔 turns a day into a simple Aardappel-Groente-Vlees
+  (potato-vegetable-meat) meal. Swipe or use ‹ › to pick the potato style
+  (boiled, fried, wedges, ...), the vegetable and the meat, and set the
+  number of portions; the choices land on the shopping list and merge with
+  recipe ingredients. The options live in `backend/app/data/avg_options.json`.
 - **Instant swaps** — ↻ and 👎 show the replacement immediately: a spare is
   kept ready per day and saved in the background. The 🔍 button offers
   type-ahead over every recipe title in the database.

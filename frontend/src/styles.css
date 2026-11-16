@@ -820,3 +820,123 @@ button.danger {
 .recipe-thumb-empty {
   display: inline-block;
 }
+
+/* --- AVG meal (potato / vegetable / meat) ------------------------------- */
+
+.avg-card-body {
+  flex: 1;
+  padding: 0.7rem 0.8rem 0.8rem;
+}
+
+.avg-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.avg-row-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.avg-row-picker {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.avg-arrow {
+  font-size: 1.5rem;
+  padding: 0 0.55rem;
+  color: var(--accent);
+}
+
+.avg-arrow:disabled {
+  color: var(--text-muted);
+}
+
+.avg-row-swipe {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  /* vertical scrolling stays with the browser, horizontal drags are ours */
+  touch-action: pan-y;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.avg-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.6rem;
+  min-height: 2.8rem;
+}
+
+.avg-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.avg-option-label {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.avg-slide-next {
+  animation: avg-slide-next 0.18s ease-out;
+}
+
+.avg-slide-prev {
+  animation: avg-slide-prev 0.18s ease-out;
+}
+
+@keyframes avg-slide-next {
+  from {
+    transform: translateX(40%);
+    opacity: 0;
+  }
+}
+
+@keyframes avg-slide-prev {
+  from {
+    transform: translateX(-40%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avg-slide-next,
+  .avg-slide-prev {
+    animation: none;
+  }
+}
+
+.avg-portions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.avg-portions span {
+  flex: 1;
+}
+
+.avg-portions strong {
+  min-width: 1.5rem;
+  text-align: center;
+  color: var(--text);
+}
+
+.day-card-cooked .avg-picker {
+  opacity: 0.45;
+  filter: grayscale(1);
+}

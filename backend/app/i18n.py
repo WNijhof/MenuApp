@@ -48,6 +48,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "en": "This week's menu is frozen. Unfreeze it first to make changes.",
         "nl": "Weekmenu is bevroren. Ontdooi de week eerst om deze te wijzigen.",
     },
+    "invalid_avg_choice": {
+        "en": "Unknown potato, vegetable or meat option, or invalid number of portions",
+        "nl": "Onbekende aardappel-, groente- of vleesoptie, of ongeldig aantal porties",
+    },
     "invalid_day_of_week": {
         "en": "day_of_week must be between 0 and 6",
         "nl": "day_of_week moet tussen 0 en 6 liggen",

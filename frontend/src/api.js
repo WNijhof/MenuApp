@@ -58,6 +58,12 @@ export const api = {
       `/menu/day/${dayOfWeek}/recipe${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,
       { method: "PUT", body: JSON.stringify({ recipe_id: recipeId }) }
     ),
+  getAvgOptions: () => request("/avg/options"),
+  setDayAvg: (dayOfWeek, weekStartDate, avg) =>
+    request(
+      `/menu/day/${dayOfWeek}/avg${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,
+      { method: "PUT", body: JSON.stringify(avg) }
+    ),
   updateDayFlags: (dayOfWeek, weekStartDate, flags) =>
     request(
       `/menu/day/${dayOfWeek}/flags${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,

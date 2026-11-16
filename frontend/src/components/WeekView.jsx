@@ -18,6 +18,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
   const [error, setError] = useState(null);
   const [dayWarning, setDayWarning] = useState(null);
   const [counts, setCounts] = useState(DEFAULT_COUNTS);
+  const [avgOptions, setAvgOptions] = useState(null); // potato/vegetable/meat choices for AVG days
   const [epoch, setEpoch] = useState(0); // bumped whenever a menu is (re)loaded or regenerated
 
   // Swipe-style swapping: one spare replacement is kept ready per day
@@ -69,6 +70,10 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStartDate]);
 
+  useEffect(() => {
+    api.getAvgOptions().then(setAvgOptions).catch(() => {});
+  }, []);
+
   menuRef.current = menu;
 
   const countsTotal = counts.hoofdgerecht + counts.voorgerecht + counts.nagerecht;
@@ -85,7 +90,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
   // weekdays (they're randomly interleaved server-side) - showing them as
   // e.g. "Thursday: no recipe" would be misleading, so just don't render
   // placeholder cards or day names in that case.
-  const visibleDays = (menu?.days || []).filter((d) => isFullWeek || d.recipe);
+  const visibleDays = (menu?.days || []).filter((d) => isFullWeek || d.recipe || d.avg);
 
   // --- spare candidates ---------------------------------------------------
 
@@ -191,7 +196,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
   // Show `recipe` on the day right away, save it in the background.
   const applyRecipeToDay = (dayOfWeek, recipe, { dislikeOld = null, warning = null } = {}) => {
     const weekStart = menuRef.current.week_start_date;
-    replaceDay(dayOfWeek, { recipe, pinned: false, cooked: false, skip_shopping: false });
+    replaceDay(dayOfWeek, { recipe, avg: null, pinned: false, cooked: false, skip_shopping: false });
     setDayWarning(warning);
     delete candidates.current[dayOfWeek];
     // A held spare that equals the dish just put on a day would now duplicate it.
@@ -244,6 +249,53 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
     } finally {
       setRefreshingDay(null);
     }
+  };
+
+  // --- AVG days (Aardappel / Groente / Vlees) -------------------------------
+
+  const pickRandom = (list) => list[Math.floor(Math.random() * list.length)].id;
+
+  // Show the new choice right away, save it in the background (in click order,
+  // like recipe swaps) so swiping through options never waits on the server.
+  const saveAvg = (dayOfWeek, avg) => {
+    const weekStart = menuRef.current.week_start_date;
+    persistChain.current = persistChain.current
+      .then(() => api.setDayAvg(dayOfWeek, weekStart, avg))
+      .catch((e) => {
+        setError(e.message);
+        load(); // the screen got ahead of the database - resync
+      });
+  };
+
+  const handleMakeAvg = (day) => {
+    if (!avgOptions) return;
+    const avg = {
+      starch: pickRandom(avgOptions.starch),
+      veg: pickRandom(avgOptions.veg),
+      meat: pickRandom(avgOptions.meat),
+      portions: 2,
+    };
+    setDayWarning(null);
+    delete candidates.current[day.day_of_week];
+    replaceDay(day.day_of_week, { recipe: null, avg, pinned: false, cooked: false, skip_shopping: false });
+    saveAvg(day.day_of_week, avg);
+  };
+
+  const handleChangeAvg = (dayOfWeek, patch) => {
+    const current = menuRef.current.days.find((d) => d.day_of_week === dayOfWeek)?.avg;
+    if (!current) return;
+    const avg = { ...current, ...patch };
+    replaceDay(dayOfWeek, { avg });
+    saveAvg(dayOfWeek, avg);
+  };
+
+  const handleShuffleAvg = (dayOfWeek) => {
+    if (!avgOptions) return;
+    handleChangeAvg(dayOfWeek, {
+      starch: pickRandom(avgOptions.starch),
+      veg: pickRandom(avgOptions.veg),
+      meat: pickRandom(avgOptions.meat),
+    });
   };
 
   const handleToggleFrozen = async () => {
@@ -363,6 +415,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
         <p className="error-text">{t("course.countTooHigh", { max: DAYS_PER_WEEK, count: countsTotal })}</p>
       )}
       {hasMenu && !isFrozen && <p className="help-text small">{t("week.pinHelp")}</p>}
+      {hasMenu && !isFrozen && <p className="help-text small">{t("avg.help")}</p>}
       {isFrozen && <p className="status-text">{t("week.frozenNotice")}</p>}
 
       {error && <p className="error-text">{error}</p>}
@@ -379,6 +432,8 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             key={day.day_of_week}
             dayOfWeek={day.day_of_week}
             recipe={day.recipe}
+            avg={day.avg}
+            avgOptions={avgOptions}
             pinned={!!day.pinned}
             cooked={!!day.cooked}
             skipShopping={!!day.skip_shopping}
@@ -386,6 +441,10 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             onRefresh={() => handleReroll(day.day_of_week)}
             onRefreshQuery={(query) => handleRefreshDay(day.day_of_week, query)}
             onPickRecipe={(recipeId) => handlePickRecipe(day.day_of_week, recipeId)}
+            onMakeAvg={hasMenu && avgOptions ? () => handleMakeAvg(day) : undefined}
+            onChangeAvg={(patch) => handleChangeAvg(day.day_of_week, patch)}
+            onShuffleAvg={() => handleShuffleAvg(day.day_of_week)}
+            onBackToRecipe={() => handleRefreshDay(day.day_of_week)}
             onTogglePinned={() => handleToggleFlag(day, "pinned")}
             onToggleCooked={() => handleToggleFlag(day, "cooked")}
             onToggleSkipShopping={() => handleToggleFlag(day, "skip_shopping")}

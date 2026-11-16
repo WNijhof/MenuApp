@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, SessionLocal, engine
 from app.models import Recipe, Source
 from app.routers import (
+    avg,
     exclusions,
     leftovers,
     menu,
@@ -45,6 +46,7 @@ _COLUMN_MIGRATIONS = [
     ("week_menu_days", "pinned", "BOOLEAN DEFAULT 0"),
     ("week_menu_days", "cooked", "BOOLEAN DEFAULT 0"),
     ("week_menu_days", "skip_shopping", "BOOLEAN DEFAULT 0"),
+    ("week_menu_days", "avg_json", "TEXT"),
 ]
 
 
@@ -143,6 +145,7 @@ app.include_router(sources.router)
 app.include_router(recipes.router)
 app.include_router(exclusions.router)
 app.include_router(menu.router)
+app.include_router(avg.router)
 app.include_router(pantry.router)
 app.include_router(leftovers.router)
 app.include_router(shopping.router)

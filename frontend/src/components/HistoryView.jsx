@@ -20,6 +20,21 @@ export default function HistoryView() {
   const [weeks, setWeeks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [avgOptions, setAvgOptions] = useState(null);
+
+  useEffect(() => {
+    api.getAvgOptions().then(setAvgOptions).catch(() => {});
+  }, []);
+
+  // "Gekookte aardappelen, Broccoli, Kipfilet"
+  const avgLabel = (avg) =>
+    ["starch", "veg", "meat"]
+      .map((category) => {
+        const option = avgOptions?.[category]?.find((o) => o.id === avg[category]);
+        return option ? option.label[language] || option.label.en : null;
+      })
+      .filter(Boolean)
+      .join(", ");
 
   useEffect(() => {
     (async () => {
@@ -79,6 +94,11 @@ export default function HistoryView() {
                         {day.recipe.title}
                       </a>
                       <span className="help-text small"> ({courseLabel(day.recipe.course, language)})</span>
+                    </>
+                  ) : day.avg ? (
+                    <>
+                      <span>{avgLabel(day.avg)}</span>
+                      <span className="help-text small"> ({t("avg.badge")})</span>
                     </>
                   ) : (
                     <span className="status-text">{t("history.noRecipe")}</span>

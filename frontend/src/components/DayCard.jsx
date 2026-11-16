@@ -3,6 +3,7 @@ import { thumbUrl } from "../api.js";
 import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabel } from "../courses.js";
 import { useTranslation } from "../i18n.jsx";
+import AvgPicker from "./AvgPicker.jsx";
 import RecipeAutocomplete from "./RecipeAutocomplete.jsx";
 import RecipeDetailModal from "./RecipeDetailModal.jsx";
 
@@ -19,12 +20,18 @@ const DAY_NAME_KEYS = [
 export default function DayCard({
   dayOfWeek,
   recipe,
+  avg = null,
+  avgOptions = null,
   pinned = false,
   cooked = false,
   skipShopping = false,
   onRefresh,
   onRefreshQuery,
   onPickRecipe,
+  onMakeAvg,
+  onChangeAvg,
+  onShuffleAvg,
+  onBackToRecipe,
   onTogglePinned,
   onToggleCooked,
   onToggleSkipShopping,
@@ -40,6 +47,8 @@ export default function DayCard({
   // A pinned or cooked dish is deliberately "done": swapping it needs an
   // explicit unpin first. (Freezing the week locks swaps for every day.)
   const swapLocked = frozen || pinned || cooked;
+  // A day is either a recipe or a simple AVG (potato/vegetable/meat) meal.
+  const hasMeal = !!(recipe || avg);
   const swapLockedTitle = frozen
     ? t("day.rerollFrozen")
     : cooked
@@ -70,7 +79,7 @@ export default function DayCard({
     <div className={cooked ? "day-card day-card-cooked" : "day-card"}>
       <div className="day-card-header">
         <span className="day-card-header-left">
-          {recipe && onToggleCooked && (
+          {hasMeal && onToggleCooked && (
             <input
               type="checkbox"
               className="day-card-cooked-check"
@@ -83,7 +92,7 @@ export default function DayCard({
           <span className="day-name">{showDayName ? t(DAY_NAME_KEYS[dayOfWeek]) : ""}</span>
         </span>
         <div className="day-card-header-actions">
-          {recipe && onToggleSkipShopping && (
+          {hasMeal && onToggleSkipShopping && (
             <button
               className={skipShopping ? "icon-button active" : "icon-button"}
               onClick={onToggleSkipShopping}
@@ -93,7 +102,7 @@ export default function DayCard({
               🛒
             </button>
           )}
-          {recipe && onTogglePinned && (
+          {hasMeal && onTogglePinned && (
             <button
               className={pinned ? "icon-button active" : "icon-button"}
               onClick={onTogglePinned}
@@ -103,7 +112,18 @@ export default function DayCard({
               📌
             </button>
           )}
-          {onPickRecipe && (
+          {onMakeAvg && (
+            <button
+              className={avg ? "icon-button active" : "icon-button"}
+              onClick={avg ? onBackToRecipe : onMakeAvg}
+              disabled={refreshing || swapLocked}
+              title={swapLocked ? swapLockedTitle : avg ? t("avg.backToRecipe") : t("avg.make")}
+              aria-label={avg ? t("avg.backToRecipe") : t("avg.make")}
+            >
+              🥔
+            </button>
+          )}
+          {onPickRecipe && !avg && (
             <button
               className={showSwapSearch ? "icon-button active" : "icon-button"}
               onClick={() => setShowSwapSearch((v) => !v)}
@@ -116,10 +136,10 @@ export default function DayCard({
           )}
           <button
             className="icon-button"
-            onClick={onRefresh}
+            onClick={avg ? onShuffleAvg : onRefresh}
             disabled={refreshing || swapLocked}
-            title={swapLocked ? swapLockedTitle : t("day.reroll")}
-            aria-label={t("day.reroll")}
+            title={swapLocked ? swapLockedTitle : avg ? t("avg.shuffle") : t("day.reroll")}
+            aria-label={avg ? t("avg.shuffle") : t("day.reroll")}
           >
             {refreshing ? "…" : "↻"}
           </button>
@@ -137,14 +157,24 @@ export default function DayCard({
         </div>
       )}
 
-      {(cooked || skipShopping) && recipe && (
+      {(cooked || skipShopping) && hasMeal && (
         <div className="day-card-status">
           {cooked && <span className="status-badge">✓ {t("day.cookedBadge")}</span>}
           {skipShopping && <span className="status-badge">🛒✕ {t("day.skippedBadge")}</span>}
         </div>
       )}
 
-      {recipe ? (
+      {avg ? (
+        <div className="avg-card-body">
+          <span className="dish-type-badge">{t("avg.badge")}</span>
+          <AvgPicker
+            avg={avg}
+            options={avgOptions}
+            disabled={frozen || cooked}
+            onChange={onChangeAvg}
+          />
+        </div>
+      ) : recipe ? (
         <>
           {recipe.is_manual ? (
             <button

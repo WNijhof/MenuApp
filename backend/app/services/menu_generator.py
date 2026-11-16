@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.i18n import t
 from app.models import Leftover, WeekMenu, WeekMenuDay
+from app.services import avg as avg_service
 from app.services.categorizer import normalize_text
 from app.services.recipe_index import (
     IndexedRecipe,
@@ -184,9 +185,14 @@ def generate_week_menu(
     kept: dict[int, dict] = {}
     if existing:
         for day in existing.days:
-            if day.recipe_id and (day.pinned or day.cooked) and day.recipe_id in index.by_id:
+            if not (day.pinned or day.cooked):
+                continue
+            is_recipe = day.recipe_id and day.recipe_id in index.by_id
+            is_avg = not day.recipe_id and avg_service.parse(day.avg_json)
+            if is_recipe or is_avg:
                 kept[day.day_of_week] = {
                     "recipe_id": day.recipe_id,
+                    "avg_json": day.avg_json if is_avg else None,
                     "pinned": day.pinned,
                     "cooked": day.cooked,
                     "skip_shopping": day.skip_shopping,
@@ -197,7 +203,9 @@ def generate_week_menu(
     warnings: list[str] = []
     kept_per_course: dict[str, int] = defaultdict(int)
     for info in kept.values():
-        kept_per_course[index.by_id[info["recipe_id"]].course] += 1
+        # An AVG meal is a main course.
+        course = index.by_id[info["recipe_id"]].course if info["recipe_id"] else "hoofdgerecht"
+        kept_per_course[course] += 1
     effective_counts = _plan_counts(course_counts, kept_per_course, warnings, lang)
 
     available = available_recipes(db)
@@ -209,7 +217,7 @@ def generate_week_menu(
     else:
         preferred_ids = preferred_recipe_ids(db)
         recent_ids = _recently_used_recipe_ids(db, week_start_date)
-        kept_ids = {info["recipe_id"] for info in kept.values()}
+        kept_ids = {info["recipe_id"] for info in kept.values() if info["recipe_id"]}
 
         course_pool: dict[str, list[IndexedRecipe]] = {}
         for course, total in effective_counts.items():
@@ -349,9 +357,25 @@ def set_day_recipe(db: Session, day_row: WeekMenuDay, recipe_id: int) -> WeekMen
     """Puts a specific recipe on a day. The day's flags describe the old
     dish, so they reset."""
     day_row.recipe_id = recipe_id
+    day_row.avg_json = None
     day_row.pinned = False
     day_row.cooked = False
     day_row.skip_shopping = False
+    db.commit()
+    db.refresh(day_row)
+    return day_row
+
+
+def set_day_avg(db: Session, day_row: WeekMenuDay, choice: dict) -> WeekMenuDay:
+    """Makes a day a simple AVG meal. Turning a recipe day into one drops the
+    recipe and resets the flags (they described the old dish); changing the
+    choices of a day that already is an AVG meal keeps its flags."""
+    if day_row.recipe_id:
+        day_row.recipe_id = None
+        day_row.pinned = False
+        day_row.cooked = False
+        day_row.skip_shopping = False
+    day_row.avg_json = json.dumps(choice)
     db.commit()
     db.refresh(day_row)
     return day_row
