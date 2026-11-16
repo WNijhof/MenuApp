@@ -32,7 +32,23 @@
     {"id": "pointed_cabbage", "emoji": "🥬", "label": {"nl": "Spitskool", "en": "Pointed cabbage"}, "shop": {"nl": "spitskool", "en": "pointed cabbage"}, "per_person": 200, "unit": "g"},
     {"id": "courgette", "emoji": "🥒", "label": {"nl": "Courgette", "en": "Zucchini"}, "shop": {"nl": "courgette", "en": "zucchini"}, "per_person": 200, "unit": "g"},
     {"id": "chicory", "emoji": "🥗", "label": {"nl": "Witlof", "en": "Chicory"}, "shop": {"nl": "witlof", "en": "chicory"}, "per_person": 200, "unit": "g"},
-    {"id": "kale", "emoji": "🥬", "label": {"nl": "Boerenkool", "en": "Kale"}, "shop": {"nl": "boerenkool", "en": "kale"}, "per_person": 200, "unit": "g"}
+    {"id": "kale", "emoji": "🥬", "label": {"nl": "Boerenkool", "en": "Kale"}, "shop": {"nl": "boerenkool", "en": "kale"}, "per_person": 200, "unit": "g"},
+    {"id": "leek", "emoji": "🥬", "label": {"nl": "Prei", "en": "Leek"}, "shop": {"nl": "prei", "en": "leek"}, "per_person": 200, "unit": "g"},
+    {"id": "bell_pepper", "emoji": "🫑", "label": {"nl": "Paprika", "en": "Bell pepper"}, "shop": {"nl": "paprika", "en": "bell pepper"}, "per_person": 150, "unit": "g"},
+    {"id": "mushrooms", "emoji": "🍄", "label": {"nl": "Champignons", "en": "Mushrooms"}, "shop": {"nl": "champignons", "en": "mushrooms"}, "per_person": 150, "unit": "g"},
+    {"id": "snow_peas", "emoji": "🫛", "label": {"nl": "Peultjes", "en": "Snow peas"}, "shop": {"nl": "peultjes", "en": "snow peas"}, "per_person": 150, "unit": "g"},
+    {"id": "asparagus", "emoji": "🌱", "label": {"nl": "Asperges", "en": "Asparagus"}, "shop": {"nl": "asperges", "en": "asparagus"}, "per_person": 250, "unit": "g"},
+    {"id": "bok_choy", "emoji": "🥬", "label": {"nl": "Paksoi", "en": "Bok choy"}, "shop": {"nl": "paksoi", "en": "bok choy"}, "per_person": 200, "unit": "g"},
+    {"id": "savoy", "emoji": "🥬", "label": {"nl": "Savooiekool", "en": "Savoy cabbage"}, "shop": {"nl": "savooiekool", "en": "savoy cabbage"}, "per_person": 200, "unit": "g"},
+    {"id": "beetroot", "emoji": "🟣", "label": {"nl": "Rode bieten", "en": "Beetroot"}, "shop": {"nl": "rode bieten", "en": "beetroot"}, "per_person": 200, "unit": "g"},
+    {"id": "pumpkin", "emoji": "🎃", "label": {"nl": "Pompoen", "en": "Pumpkin"}, "shop": {"nl": "pompoen", "en": "pumpkin"}, "per_person": 200, "unit": "g"},
+    {"id": "eggplant", "emoji": "🍆", "label": {"nl": "Aubergine", "en": "Eggplant"}, "shop": {"nl": "aubergine", "en": "eggplant"}, "per_person": 200, "unit": "g"},
+    {"id": "corn", "emoji": "🌽", "label": {"nl": "Maiskolf", "en": "Corn on the cob"}, "shop": {"nl": "maiskolf", "en": "corn on the cob"}, "per_person": 1, "unit": ""},
+    {"id": "fennel", "emoji": "🌿", "label": {"nl": "Venkel", "en": "Fennel"}, "shop": {"nl": "venkel", "en": "fennel"}, "per_person": 200, "unit": "g"},
+    {"id": "kohlrabi", "emoji": "🥬", "label": {"nl": "Koolrabi", "en": "Kohlrabi"}, "shop": {"nl": "koolrabi", "en": "kohlrabi"}, "per_person": 200, "unit": "g"},
+    {"id": "tomatoes", "emoji": "🍅", "label": {"nl": "Tomaten", "en": "Tomatoes"}, "shop": {"nl": "tomaten", "en": "tomatoes"}, "per_person": 150, "unit": "g"},
+    {"id": "salad", "emoji": "🥗", "label": {"nl": "Gemengde sla", "en": "Mixed salad"}, "shop": {"nl": "sla", "en": "lettuce"}, "per_person": 100, "unit": "g"},
+    {"id": "sauerkraut", "emoji": "🥬", "label": {"nl": "Zuurkool", "en": "Sauerkraut"}, "shop": {"nl": "zuurkool", "en": "sauerkraut"}, "per_person": 200, "unit": "g"}
   ],
   "meat": [
     {"id": "chicken_breast", "emoji": "🍗", "label": {"nl": "Kipfilet", "en": "Chicken breast"}, "shop": {"nl": "kipfilet", "en": "chicken breast"}, "per_person": 1, "unit": ""},
@@ -44,6 +60,16 @@
     {"id": "smoked_sausage", "emoji": "🌭", "label": {"nl": "Rookworst", "en": "Smoked sausage"}, "shop": {"nl": "rookworst", "en": "smoked sausage"}, "per_person": 0.5, "unit": ""},
     {"id": "schnitzel", "emoji": "🥩", "label": {"nl": "Schnitzel", "en": "Schnitzel"}, "shop": {"nl": "schnitzel", "en": "schnitzel"}, "per_person": 1, "unit": ""},
     {"id": "pork_chop", "emoji": "🥩", "label": {"nl": "Karbonade", "en": "Pork chop"}, "shop": {"nl": "karbonade", "en": "pork chop"}, "per_person": 1, "unit": ""},
-    {"id": "bacon_strip", "emoji": "🥓", "label": {"nl": "Speklappen", "en": "Pork belly slices"}, "shop": {"nl": "speklap", "en": "pork belly slices"}, "per_person": 2, "unit": ""}
+    {"id": "bacon_strip", "emoji": "🥓", "label": {"nl": "Speklappen", "en": "Pork belly slices"}, "shop": {"nl": "speklap", "en": "pork belly slices"}, "per_person": 2, "unit": ""},
+    {"id": "pork_tenderloin", "emoji": "🥩", "label": {"nl": "Varkenshaasmedaillons", "en": "Pork tenderloin medallions"}, "shop": {"nl": "varkenshaas medaillons", "en": "pork tenderloin medallions"}, "per_person": 3, "unit": ""},
+    {"id": "steak", "emoji": "🥩", "label": {"nl": "Biefstuk", "en": "Steak"}, "shop": {"nl": "biefstuk", "en": "steak"}, "per_person": 1, "unit": ""},
+    {"id": "lamb_chop", "emoji": "🍖", "label": {"nl": "Lamskoteletjes", "en": "Lamb chops"}, "shop": {"nl": "lamskotelet", "en": "lamb chops"}, "per_person": 2, "unit": ""},
+    {"id": "chicken_wings", "emoji": "🍗", "label": {"nl": "Kippenvleugels", "en": "Chicken wings"}, "shop": {"nl": "kippenvleugels", "en": "chicken wings"}, "per_person": 4, "unit": ""},
+    {"id": "chicken_schnitzel", "emoji": "🥩", "label": {"nl": "Kipschnitzel", "en": "Chicken schnitzel"}, "shop": {"nl": "kipschnitzel", "en": "chicken schnitzel"}, "per_person": 1, "unit": ""},
+    {"id": "turkey", "emoji": "🦃", "label": {"nl": "Kalkoenfilet", "en": "Turkey fillet"}, "shop": {"nl": "kalkoenfilet", "en": "turkey fillet"}, "per_person": 1, "unit": ""},
+    {"id": "cordon_bleu", "emoji": "🧀", "label": {"nl": "Cordon bleu", "en": "Cordon bleu"}, "shop": {"nl": "cordon bleu", "en": "cordon bleu"}, "per_person": 1, "unit": ""},
+    {"id": "slavink", "emoji": "🥓", "label": {"nl": "Slavink", "en": "Pork sausage roll"}, "shop": {"nl": "slavink", "en": "pork sausage roll"}, "per_person": 1, "unit": ""},
+    {"id": "hot_dog", "emoji": "🌭", "label": {"nl": "Knakworstjes", "en": "Hot dog sausages"}, "shop": {"nl": "knakworst", "en": "hot dog sausages"}, "per_person": 2, "unit": ""},
+    {"id": "nuggets", "emoji": "🍗", "label": {"nl": "Kipnuggets", "en": "Chicken nuggets"}, "shop": {"nl": "kipnuggets", "en": "chicken nuggets"}, "per_person": 5, "unit": ""}
   ]
 }

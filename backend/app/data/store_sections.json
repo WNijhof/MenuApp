@@ -24,7 +24,7 @@
       "apple", "pear", "banana", "bananas", "grapes", "strawberries", "raspberries", "blueberries", "berries", "melon",
       "pineapple", "peach", "plum", "pomegranate", "parsley", "cilantro", "basil", "mint", "chives", "dill", "sage",
       "fresh thyme", "fresh rosemary", "fresh oregano", "lemongrass", "bean sprouts", "watercress", "bok choy", "pak choi",
-      "endive", "chicory"
+      "endive", "chicory", "kohlrabi"
     ]
   },
   {
@@ -56,7 +56,7 @@
       "pork", "pork chop", "pork chops", "pork tenderloin", "pork mince", "ground pork", "pork belly", "sausage", "sausages",
       "lamb", "ground lamb", "lamb chops", "salmon", "smoked salmon", "cod", "tuna steak", "trout", "mackerel", "herring",
       "haddock", "sea bass", "fish", "fish fillet", "shrimp", "shrimps", "prawns", "prawn", "mussels", "crab", "squid",
-      "scallops", "lobster", "anchovies", "veggie burger", "meat substitute", "plant-based mince", "vegetarian mince"
+      "scallops", "lobster", "anchovies", "cordon bleu", "slavink", "kipnuggets", "nuggets", "veggie burger", "meat substitute", "plant-based mince", "vegetarian mince"
     ]
   },
   {
