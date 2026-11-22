@@ -2,7 +2,10 @@ import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabel } from "../courses.js";
 import { useTranslation } from "../i18n.jsx";
 
-export default function RecipeDetailModal({ recipe, onClose }) {
+// `overrides` (optional): this day's shopping-list tweaks, {original line:
+// replacement, or null = left off}. Replaced lines are marked so it's clear
+// while cooking that something else was bought.
+export default function RecipeDetailModal({ recipe, overrides = {}, onClose }) {
   const { t, language } = useTranslation();
 
   return (
@@ -23,9 +26,16 @@ export default function RecipeDetailModal({ recipe, onClose }) {
         <h4>{t("recipes.ingredients")}</h4>
         {recipe.ingredients.length > 0 ? (
           <ul className="modal-list">
-            {recipe.ingredients.map((line, i) => (
-              <li key={i}>{line}</li>
-            ))}
+            {recipe.ingredients.map((line, i) => {
+              const replacement = overrides?.[line];
+              return replacement ? (
+                <li key={i} className="ingredient-replaced" title={t("day.replacedTitle")}>
+                  ✎ <s>{line}</s> → <strong>{replacement}</strong>
+                </li>
+              ) : (
+                <li key={i}>{line}</li>
+              );
+            })}
           </ul>
         ) : (
           <p className="status-text">{t("recipes.noIngredients")}</p>

@@ -52,6 +52,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "en": "Unknown potato, vegetable or meat option, or invalid number of portions",
         "nl": "Onbekende aardappel-, groente- of vleesoptie, of ongeldig aantal porties",
     },
+    "day_has_no_recipe": {
+        "en": "This day has no recipe whose ingredients could be changed",
+        "nl": "Deze dag heeft geen recept waarvan je de ingrediënten kunt aanpassen",
+    },
     "invalid_day_of_week": {
         "en": "day_of_week must be between 0 and 6",
         "nl": "day_of_week moet tussen 0 en 6 liggen",

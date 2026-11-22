@@ -69,6 +69,11 @@ export const api = {
       `/menu/day/${dayOfWeek}/flags${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,
       { method: "PATCH", body: JSON.stringify(flags) }
     ),
+  setDayIngredients: (dayOfWeek, weekStartDate, overrides) =>
+    request(
+      `/menu/day/${dayOfWeek}/ingredients${weekStartDate ? `?week_start_date=${weekStartDate}` : ""}`,
+      { method: "PUT", body: JSON.stringify({ overrides }) }
+    ),
   setWeekFrozen: (weekStartDate, frozen) =>
     request(`/menu/${weekStartDate}/freeze`, {
       method: "PATCH",

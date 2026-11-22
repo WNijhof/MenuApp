@@ -47,6 +47,7 @@ _COLUMN_MIGRATIONS = [
     ("week_menu_days", "cooked", "BOOLEAN DEFAULT 0"),
     ("week_menu_days", "skip_shopping", "BOOLEAN DEFAULT 0"),
     ("week_menu_days", "avg_json", "TEXT"),
+    ("week_menu_days", "ingredient_overrides_json", "TEXT"),
 ]
 
 

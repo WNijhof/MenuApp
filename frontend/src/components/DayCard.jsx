@@ -4,6 +4,7 @@ import { dishTypeLabel } from "../dishTypes.js";
 import { courseLabel } from "../courses.js";
 import { useTranslation } from "../i18n.jsx";
 import AvgPicker from "./AvgPicker.jsx";
+import IngredientEditModal from "./IngredientEditModal.jsx";
 import RecipeAutocomplete from "./RecipeAutocomplete.jsx";
 import RecipeDetailModal from "./RecipeDetailModal.jsx";
 
@@ -25,6 +26,8 @@ export default function DayCard({
   pinned = false,
   cooked = false,
   skipShopping = false,
+  ingredientOverrides = {},
+  onSaveIngredients,
   onRefresh,
   onRefreshQuery,
   onPickRecipe,
@@ -43,6 +46,14 @@ export default function DayCard({
   const { t, language } = useTranslation();
   const [showSwapSearch, setShowSwapSearch] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(false);
+  const changedIngredients = Object.keys(ingredientOverrides || {}).length;
+  // Hand-replaced lines matter while cooking (you bought something else than
+  // the recipe says), so they're listed on the card itself. Lines that were
+  // only left off the list (already at home) don't change the cooking.
+  const replacedIngredients = recipe && !avg
+    ? Object.entries(ingredientOverrides || {}).filter(([, replacement]) => replacement)
+    : [];
 
   // A pinned or cooked dish is deliberately "done": swapping it needs an
   // explicit unpin first. (Freezing the week locks swaps for every day.)
@@ -102,6 +113,17 @@ export default function DayCard({
               🛒
             </button>
           )}
+          {recipe && !avg && onSaveIngredients && (
+            <button
+              className={changedIngredients ? "icon-button active" : "icon-button"}
+              onClick={() => setShowIngredients(true)}
+              disabled={skipShopping}
+              title={skipShopping ? t("day.skippedBadge") : t("day.editIngredients")}
+              aria-label={t("day.editIngredients")}
+            >
+              📝
+            </button>
+          )}
           {hasMeal && onTogglePinned && (
             <button
               className={pinned ? "icon-button active" : "icon-button"}
@@ -157,10 +179,19 @@ export default function DayCard({
         </div>
       )}
 
-      {(cooked || skipShopping) && hasMeal && (
+      {(cooked || skipShopping || (recipe && !avg && changedIngredients > 0)) && hasMeal && (
         <div className="day-card-status">
           {cooked && <span className="status-badge">✓ {t("day.cookedBadge")}</span>}
           {skipShopping && <span className="status-badge">🛒✕ {t("day.skippedBadge")}</span>}
+          {!skipShopping && recipe && !avg && changedIngredients > 0 && (
+            <button
+              type="button"
+              className="status-badge status-badge-button"
+              onClick={() => setShowIngredients(true)}
+            >
+              📝 {t("day.ingredientsChangedBadge", { count: changedIngredients })}
+            </button>
+          )}
         </div>
       )}
 
@@ -202,6 +233,18 @@ export default function DayCard({
               </div>
             </a>
           )}
+          {replacedIngredients.length > 0 && (
+            <div className="day-card-replacements">
+              <span className="day-card-replacements-title">✎ {t("day.replacedTitle")}</span>
+              <ul>
+                {replacedIngredients.map(([original, replacement]) => (
+                  <li key={original}>
+                    <s>{original}</s> → <strong>{replacement}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {onRate && (
             <div className="rating-buttons day-card-rating">
               <button
@@ -227,7 +270,19 @@ export default function DayCard({
         <div className="day-card-empty">{t("day.noRecipe")}</div>
       )}
 
-      {showDetail && recipe && <RecipeDetailModal recipe={recipe} onClose={() => setShowDetail(false)} />}
+      {showDetail && recipe && <RecipeDetailModal
+          recipe={recipe}
+          overrides={avg ? {} : ingredientOverrides}
+          onClose={() => setShowDetail(false)}
+        />}
+      {showIngredients && recipe && (
+        <IngredientEditModal
+          recipe={recipe}
+          overrides={ingredientOverrides}
+          onSave={onSaveIngredients}
+          onClose={() => setShowIngredients(false)}
+        />
+      )}
     </div>
   );
 }

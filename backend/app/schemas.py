@@ -144,6 +144,13 @@ class WeekMenuDayOut(BaseModel):
     pinned: bool = False
     cooked: bool = False
     skip_shopping: bool = False
+    # {original ingredient line: replacement text, or null = left off the
+    # shopping list}. Only lines that differ from the recipe are present.
+    ingredient_overrides: dict[str, str | None] = {}
+
+
+class IngredientOverridesUpdate(BaseModel):
+    overrides: dict[str, str | None] = {}
 
 
 class DayFlagsUpdate(BaseModel):

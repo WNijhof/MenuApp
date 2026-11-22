@@ -224,6 +224,11 @@ class WeekMenuDay(Base):
     # vegetable + meat, see services/avg.py): JSON of the three chosen
     # option ids plus the number of portions. Mutually exclusive with recipe_id.
     avg_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Per-day tweaks to the recipe's ingredients for the shopping list only
+    # (the recipe itself is untouched): JSON {original line: replacement},
+    # where a replacement of null means "leave this line off the list".
+    # Reset with the other flags whenever the day's recipe changes.
+    ingredient_overrides_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     week_menu: Mapped["WeekMenu"] = relationship(back_populates="days")
     recipe: Mapped["Recipe | None"] = relationship()

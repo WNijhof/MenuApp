@@ -196,7 +196,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
   // Show `recipe` on the day right away, save it in the background.
   const applyRecipeToDay = (dayOfWeek, recipe, { dislikeOld = null, warning = null } = {}) => {
     const weekStart = menuRef.current.week_start_date;
-    replaceDay(dayOfWeek, { recipe, avg: null, pinned: false, cooked: false, skip_shopping: false });
+    replaceDay(dayOfWeek, { recipe, avg: null, pinned: false, cooked: false, skip_shopping: false, ingredient_overrides: {} });
     setDayWarning(warning);
     delete candidates.current[dayOfWeek];
     // A held spare that equals the dish just put on a day would now duplicate it.
@@ -277,7 +277,7 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
     };
     setDayWarning(null);
     delete candidates.current[day.day_of_week];
-    replaceDay(day.day_of_week, { recipe: null, avg, pinned: false, cooked: false, skip_shopping: false });
+    replaceDay(day.day_of_week, { recipe: null, avg, pinned: false, cooked: false, skip_shopping: false, ingredient_overrides: {} });
     saveAvg(day.day_of_week, avg);
   };
 
@@ -328,6 +328,12 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
       replaceDay(day.day_of_week, { [flag]: !next });
       setError(e.message);
     }
+  };
+
+  // Throws on failure so the ingredient editor can show the error and stay open.
+  const handleSaveIngredients = async (day, overrides) => {
+    const updated = await api.setDayIngredients(day.day_of_week, menu.week_start_date, overrides);
+    replaceDay(day.day_of_week, { ingredient_overrides: updated.ingredient_overrides || {} });
   };
 
   const handleRateDay = async (day, rating) => {
@@ -437,6 +443,8 @@ export default function WeekView({ weekStartDate, onWeekChange }) {
             pinned={!!day.pinned}
             cooked={!!day.cooked}
             skipShopping={!!day.skip_shopping}
+            ingredientOverrides={day.ingredient_overrides || {}}
+            onSaveIngredients={hasMenu ? (overrides) => handleSaveIngredients(day, overrides) : undefined}
             refreshing={refreshingDay === day.day_of_week}
             onRefresh={() => handleReroll(day.day_of_week)}
             onRefreshQuery={(query) => handleRefreshDay(day.day_of_week, query)}

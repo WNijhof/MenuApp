@@ -940,3 +940,99 @@ button.danger {
   opacity: 0.45;
   filter: grayscale(1);
 }
+
+/* --- per-day ingredient tweaks for the shopping list --------------------- */
+
+.ingredient-edit-help {
+  margin: 0.5rem 0 0.8rem;
+  font-size: 0.85rem;
+}
+
+.ingredient-edit-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ingredient-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ingredient-edit-row input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--accent, #3a7ca5);
+}
+
+.ingredient-edit-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.ingredient-edit-removed input[type="text"] {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.ingredient-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.status-badge-button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.day-card-replacements {
+  margin: 0.4rem 0.8rem 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid var(--accent, #3a7ca5);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent, #3a7ca5) 10%, transparent);
+  font-size: 0.8rem;
+}
+
+.day-card-replacements-title {
+  font-weight: 600;
+}
+
+.day-card-replacements ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1rem;
+}
+
+.day-card-replacements s,
+.ingredient-replaced s {
+  color: var(--text-muted);
+}
+
+.ingredient-replaced {
+  color: var(--accent, #3a7ca5);
+}
+
+.ingredient-replaced strong {
+  color: var(--text);
+}

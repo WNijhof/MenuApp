@@ -196,6 +196,7 @@ def generate_week_menu(
                     "pinned": day.pinned,
                     "cooked": day.cooked,
                     "skip_shopping": day.skip_shopping,
+                    "ingredient_overrides_json": day.ingredient_overrides_json if is_recipe else None,
                 }
         db.delete(existing)
         db.flush()
@@ -361,6 +362,7 @@ def set_day_recipe(db: Session, day_row: WeekMenuDay, recipe_id: int) -> WeekMen
     day_row.pinned = False
     day_row.cooked = False
     day_row.skip_shopping = False
+    day_row.ingredient_overrides_json = None
     db.commit()
     db.refresh(day_row)
     return day_row
@@ -375,6 +377,7 @@ def set_day_avg(db: Session, day_row: WeekMenuDay, choice: dict) -> WeekMenuDay:
         day_row.pinned = False
         day_row.cooked = False
         day_row.skip_shopping = False
+        day_row.ingredient_overrides_json = None
     day_row.avg_json = json.dumps(choice)
     db.commit()
     db.refresh(day_row)

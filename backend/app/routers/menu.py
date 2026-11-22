@@ -18,7 +18,7 @@ from app.services.menu_generator import (
     set_day_recipe,
 )
 from app.services.settings import default_course_counts, get_language
-from app.services.shopping_list import build_shopping_list
+from app.services.shopping_list import build_shopping_list, parse_overrides
 
 router = APIRouter(prefix="/api/menu", tags=["menu"])
 
@@ -47,6 +47,7 @@ def _day_out(day: WeekMenuDay, warning: str | None = None) -> schemas.WeekMenuDa
         pinned=bool(day.pinned),
         cooked=bool(day.cooked),
         skip_shopping=bool(day.skip_shopping),
+        ingredient_overrides=parse_overrides(day.ingredient_overrides_json) if day.recipe else {},
     )
 
 
@@ -275,6 +276,37 @@ def update_menu_day_flags(
         value = getattr(payload, field)
         if value is not None:
             setattr(day_row, field, value)
+    db.commit()
+    db.refresh(day_row)
+    return _day_out(day_row)
+
+
+@router.put("/day/{day_of_week}/ingredients", response_model=schemas.WeekMenuDayOut)
+def set_menu_day_ingredients(
+    day_of_week: int,
+    payload: schemas.IngredientOverridesUpdate,
+    week_start_date: datetime.date | None = None,
+    db: Session = Depends(get_db),
+):
+    """Changes or leaves off single ingredient lines of this day's recipe -
+    for the shopping list only, the recipe itself stays as it is. Replaces
+    the day's whole set of overrides; keys that aren't one of the recipe's
+    lines are ignored, as are "replacements" identical to the original.
+    Allowed on a frozen week, like skip_shopping: it doesn't change the menu."""
+    lang = get_language(db)
+    _, day_row = _load_day(db, day_of_week, week_start_date, lang)
+    if not day_row.recipe:
+        raise HTTPException(400, t("day_has_no_recipe", lang))
+    recipe_lines = set(json.loads(day_row.recipe.ingredients_json or "[]"))
+    overrides: dict[str, str | None] = {}
+    for original, replacement in payload.overrides.items():
+        if original not in recipe_lines:
+            continue
+        replacement = replacement.strip() if replacement else None
+        if replacement == original.strip():
+            continue
+        overrides[original] = replacement or None
+    day_row.ingredient_overrides_json = json.dumps(overrides, ensure_ascii=False) if overrides else None
     db.commit()
     db.refresh(day_row)
     return _day_out(day_row)
