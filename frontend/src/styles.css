@@ -156,8 +156,10 @@ button.danger {
 
 .day-card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 0.3rem 0.5rem;
   padding: 0.6rem 0.8rem;
   border-bottom: 1px solid var(--border);
 }
@@ -545,9 +547,18 @@ button.danger {
   font-weight: 600;
 }
 
+/* Wraps onto its own line (right-aligned) when a narrow card can't fit all
+   the buttons next to the day name - never on top of the cooked checkbox. */
 .day-card-header-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.1rem;
+  margin-left: auto;
+}
+
+.day-card-header-actions .icon-button {
+  padding: 0.25rem 0.4rem;
 }
 
 .day-card-swap-search {
@@ -690,7 +701,7 @@ button.danger {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 0;
+  flex-shrink: 0;
 }
 
 .day-card-cooked-check {
